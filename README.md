@@ -16,6 +16,7 @@ git clone https://github.com/xyths/ot-engine.git
 go get -u github.com/gin-gonic/gin
 go get -u github.com/kardianos/govendor
 go get -u github.com/go-sql-driver/mysql
+go get -u github.com/ethereum/go-ethereum
 ```
 
 ### 准备数据库
@@ -28,11 +29,13 @@ CREATE TABLE squareNum (number int PRIMARY KEY, squareNumber int);
 ```
 
 ### 测试数据库
+
 ```
 $ go run dbtest.go
 The square number of 13 is: 169
 The square number of 1 is: 1
 ```
+
 ### 启动服务
 
 ```
