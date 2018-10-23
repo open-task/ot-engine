@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
 	"log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	openTask "./contracts"
 )
 
 func main() {
@@ -17,12 +19,12 @@ func main() {
 
 	_ = client // we'll use this in the upcoming sections
 
-	//address := common.HexToAddress("0xF562a7c51a158ae6E6170Ef7905af5d1cE43d24A") // Rinkeby
-	//instance, err := openTask.NewOpenTask(address, client)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//fmt.Println("contract is loaded")
-	//_ = instance
+	address := common.HexToAddress("0xF562a7c51a158ae6E6170Ef7905af5d1cE43d24A") // Rinkeby
+	instance, err := openTask.NewOpenTask(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("contract is loaded")
+	_ = instance
 }
