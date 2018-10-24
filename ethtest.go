@@ -27,4 +27,10 @@ func main() {
 
 	fmt.Println("contract is loaded")
 	_ = instance
+
+	owner, err := instance.Owner(nil);
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("contract owner is %s\n", owner.Hex());
 }
