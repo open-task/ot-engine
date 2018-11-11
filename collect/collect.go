@@ -11,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"strings"
 	openTask "github.com/xyths/ot-engine/contracts"
+	"github.com/xyths/ot-engine/decode"
 )
 
 //func Collect(client *Client, query FilterQuery) {
@@ -45,6 +46,22 @@ func Collect(server string, address string, from int, to int, eventType string) 
 
 	for _, vLog := range logs {
 		fmt.Printf("TxHash: %s\n", vLog.TxHash.Hex())
+
+		if len(vLog.Topics) >= 1 {
+			switch vLog.Topics[0].String() {
+			case decode.PublishSig:
+				fmt.Println("Publish")
+			case decode.SolveSig:
+				fmt.Println("Solve")
+			case decode.AcceptSig:
+				fmt.Println("Accept")
+			case decode.RejectSig:
+				fmt.Println("Reject")
+			default:
+				//
+				fmt.Println("UNKNOWN Event Log")
+			}
+		}
 
 		for j, vTopic := range vLog.Topics {
 			fmt.Printf("\t[Topic%d]: %s\n", j, vTopic.String())
