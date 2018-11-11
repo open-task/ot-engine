@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/xyths/ot-engine/collect"
 )
+
 const version string = "0.1.0"
 
 // 实际中应该用更好的变量名
@@ -46,7 +48,7 @@ func main() {
 		return
 	}
 
-	download(n,a,f,t,e)
+	download(n, a, f, t, e)
 }
 
 func usage() {
@@ -58,9 +60,11 @@ Options:
 	flag.PrintDefaults()
 }
 
-func download(network string, address string, from int,to int, t string) {
+func download(network string, address string, from int, to int, t string) {
 	if network == "rinkeby" || network == "r" {
 		// rinkeby
 		fmt.Println("network is rinkeby.")
+		server := "https://rinkeby.infura.io/v3/e17969db9bc94e75a474b3d3c5257a75"
+		collect.Collect(server, address, from,to, t)
 	}
 }
