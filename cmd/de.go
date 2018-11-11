@@ -65,6 +65,6 @@ func download(network string, address string, from int, to int, t string) {
 		// rinkeby
 		fmt.Println("network is rinkeby.")
 		server := "https://rinkeby.infura.io/v3/e17969db9bc94e75a474b3d3c5257a75"
-		collect.Collect(server, address, from,to, t)
+		collect.Collect(server, address, from, to, t)
 	}
 }

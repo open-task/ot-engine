@@ -8,21 +8,13 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"math/big"
 	"context"
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"strings"
-	openTask "github.com/xyths/ot-engine/contracts"
 	"github.com/xyths/ot-engine/decode"
 )
 
-//func Collect(client *Client, query FilterQuery) {
 func Collect(server string, address string, from int, to int, eventType string) {
-	fmt.Println("in collect now")
-
 	client, err := ethclient.Dial(server)
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		fmt.Println("we have a connection now.")
 	}
 	contractAddress := common.HexToAddress(address)
 
@@ -39,24 +31,28 @@ func Collect(server string, address string, from int, to int, eventType string) 
 		log.Fatal(err)
 	}
 
-	contractAbi, err := abi.JSON(strings.NewReader(string(openTask.OpenTaskABI)))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, vLog := range logs {
-		fmt.Printf("TxHash: %s\n", vLog.TxHash.Hex())
+	for i, vLog := range logs {
+		fmt.Printf("TxHash[%d]: %s\n", i, vLog.TxHash.Hex())
 
 		if len(vLog.Topics) >= 1 {
+			fmt.Printf("Sig(Topic0): %s\n", vLog.Topics[0].String())
 			switch vLog.Topics[0].String() {
 			case decode.PublishSig:
 				fmt.Println("Publish")
+				Publish(vLog.Topics)
 			case decode.SolveSig:
 				fmt.Println("Solve")
+				Solve(vLog.Topics)
 			case decode.AcceptSig:
 				fmt.Println("Accept")
+				Accept(vLog.Topics)
 			case decode.RejectSig:
 				fmt.Println("Reject")
+				Reject(vLog.Topics)
 			default:
 				//
 				fmt.Println("UNKNOWN Event Log")
@@ -66,18 +62,6 @@ func Collect(server string, address string, from int, to int, eventType string) 
 		for j, vTopic := range vLog.Topics {
 			fmt.Printf("\t[Topic%d]: %s\n", j, vTopic.String())
 		}
-		fmt.Printf("Data: %v\n", vLog.Data)
-
-		event := struct {
-			missionId   string
-			rewardInWei *big.Int
-		}{}
-		err := contractAbi.Unpack(&event, "Publish", vLog.Data)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("missionId: %s\n", event.missionId)
-		fmt.Printf("rewardInWei: %v\n", event.rewardInWei)
+		//fmt.Printf("Data: %v\n", vLog.Data)
 	}
 }
