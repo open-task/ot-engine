@@ -84,6 +84,6 @@ confirmSigHash: %s
 		for j, vTopic := range vLog.Topics {
 			fmt.Printf("\t[Topic%d]: %s\n", j, vTopic.String())
 		}
-		fmt.Printf("Data: %v\n", vLog.Data)
+		//fmt.Printf("Data: %v\n", vLog.Data)
 	}
 }

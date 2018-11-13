@@ -30,7 +30,6 @@ func Publish(topics []common.Hash, data []byte) {
 }
 
 func Solve(topics []common.Hash, data []byte) {
-	fmt.Println("Solve")
 	event := struct {
 		SolutionId string
 		MissionId string
@@ -50,7 +49,6 @@ func Solve(topics []common.Hash, data []byte) {
 }
 
 func Accept(topics []common.Hash, data []byte) {
-	fmt.Println("Accept")
 	event := struct {
 		SolutionId string
 	}{}
@@ -68,7 +66,6 @@ func Accept(topics []common.Hash, data []byte) {
 }
 
 func Reject(topics []common.Hash, data []byte) {
-	fmt.Println("Reject")
 	event := struct {
 		SolutionId string
 	}{}
