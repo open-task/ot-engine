@@ -8,9 +8,10 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"strings"
 	openTask "github.com/xyths/ot-engine/contracts"
+	"github.com/xyths/ot-engine/types"
 )
 
-func Publish(topics []common.Hash, data []byte) {
+func Publish(topics []common.Hash, data []byte) (p types.PublishEvent, err error) {
 	event := struct {
 		MissionId string
 		RewardInWei *big.Int
@@ -27,6 +28,12 @@ func Publish(topics []common.Hash, data []byte) {
 
 	fmt.Printf("missionId: %s\n", event.MissionId)
 	fmt.Printf("rewardInWei: %v\n", event.RewardInWei.String())
+
+	p.Mission = event.MissionId
+	p.Reward = event.RewardInWei
+	p.Block = 1
+	p.Tx = "0x"
+	return p, err
 }
 
 func Solve(topics []common.Hash, data []byte) {

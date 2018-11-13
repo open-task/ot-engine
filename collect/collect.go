@@ -9,6 +9,12 @@ import (
 	"math/big"
 	"context"
 	"github.com/ethereum/go-ethereum/crypto"
+	"database/sql"
+)
+
+import (
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/xyths/ot-engine/database"
 )
 
 func Collect(server string, address string, from int, to int, eventType string) {
@@ -54,6 +60,12 @@ rejectSigHash: %s
 confirmSigHash: %s
 `, publishSigHash.Hex(), solveSigHash.Hex(), acceptSigHash.Hex(), rejectSigHash.Hex(), confirmSigHash.Hex())
 
+	db, err := sql.Open("mysql", "engine:decopentask@/ot_local")
+	if err != nil {
+		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
+	}
+	defer db.Close()
+
 	for i, vLog := range logs {
 		fmt.Printf("TxHash[%d]: %s\n", i, vLog.TxHash.Hex())
 
@@ -62,7 +74,11 @@ confirmSigHash: %s
 			switch vLog.Topics[0].String() {
 			case publishSigHash.Hex():
 				fmt.Println("Publish")
-				Publish(vLog.Topics, vLog.Data)
+				row, err := Publish(vLog.Topics, vLog.Data)
+				if err != nil {
+					continue
+				}
+				database.Publish(db, row)
 			case solveSigHash.Hex():
 				fmt.Println("Solve")
 				Solve(vLog.Topics, vLog.Data)
