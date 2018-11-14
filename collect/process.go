@@ -1,61 +1,68 @@
 package collect
 
 import (
-	"github.com/ethereum/go-ethereum/common"
+	coreTypes "github.com/ethereum/go-ethereum/core/types"
 	"fmt"
 	"math/big"
 	"log"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"strings"
 	openTask "github.com/xyths/ot-engine/contracts"
-	"github.com/xyths/ot-engine/types"
+	otTypes "github.com/xyths/ot-engine/types"
 )
 
-func Publish(topics []common.Hash, data []byte) (p types.PublishEvent, err error) {
+func Publish(vLog coreTypes.Log) (p otTypes.PublishEvent, err error) {
 	event := struct {
-		MissionId string
+		MissionId   string
 		RewardInWei *big.Int
 	}{}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(openTask.OpenTaskABI)))
 	if err != nil {
 		log.Fatal(err)
+		return p, err
 	}
-	err = contractAbi.Unpack(&event, "Publish", data)
+	err = contractAbi.Unpack(&event, "Publish", vLog.Data)
 	if err != nil {
 		log.Fatal(err)
+		return p, err
 	}
 
-	fmt.Printf("missionId: %s\n", event.MissionId)
-	fmt.Printf("rewardInWei: %v\n", event.RewardInWei.String())
+	fmt.Printf("missionId: %s, rewardInWei: %s\n\n", event.MissionId, event.RewardInWei.String())
 
 	p.Mission = event.MissionId
 	p.Reward = event.RewardInWei
-	p.Block = 1
-	p.Tx = "0x"
+	p.Block = vLog.BlockNumber
+	p.Tx = vLog.TxHash.String()
 	return p, err
 }
 
-func Solve(topics []common.Hash, data []byte) {
+func Solve(vLog coreTypes.Log) (s otTypes.SolveEvent, err error) {
 	event := struct {
 		SolutionId string
-		MissionId string
-		Data string
+		MissionId  string
+		Data       string
 	}{}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(openTask.OpenTaskABI)))
 	if err != nil {
 		log.Fatal(err)
+		return s, err
 	}
-	err = contractAbi.Unpack(&event, "Solve", data)
+	err = contractAbi.Unpack(&event, "Solve", vLog.Data)
 	if err != nil {
 		log.Fatal(err)
+		return s, err
 	}
 
-	fmt.Printf("solutionId: %s, missionId: %s, rewardInWei: %s\n", event.SolutionId,event.MissionId, event.Data)
+	fmt.Printf("solutionId: %s, missionId: %s, data: %s\n", event.SolutionId, event.MissionId, event.Data)
+	s.Solution=event.SolutionId
+	s.Mission = event.MissionId
+	s.Data = event.Data
+	return s, err
 }
 
-func Accept(topics []common.Hash, data []byte) {
+func Accept(vLog coreTypes.Log) (a otTypes.AcceptEvent, err error) {
 	event := struct {
 		SolutionId string
 	}{}
@@ -63,16 +70,19 @@ func Accept(topics []common.Hash, data []byte) {
 	contractAbi, err := abi.JSON(strings.NewReader(string(openTask.OpenTaskABI)))
 	if err != nil {
 		log.Fatal(err)
+		return a, err
 	}
-	err = contractAbi.Unpack(&event, "Accept", data)
+	err = contractAbi.Unpack(&event, "Accept", vLog.Data)
 	if err != nil {
 		log.Fatal(err)
+		return a, err
 	}
 
 	fmt.Printf("solutionId: %s\n", event.SolutionId)
+	return a, err
 }
 
-func Reject(topics []common.Hash, data []byte) {
+func Reject(vLog coreTypes.Log) (r otTypes.RejectEvent, err error) {
 	event := struct {
 		SolutionId string
 	}{}
@@ -80,30 +90,36 @@ func Reject(topics []common.Hash, data []byte) {
 	contractAbi, err := abi.JSON(strings.NewReader(string(openTask.OpenTaskABI)))
 	if err != nil {
 		log.Fatal(err)
+		return r, err
 	}
-	err = contractAbi.Unpack(&event, "Reject", data)
+	err = contractAbi.Unpack(&event, "Reject", vLog.Data)
 	if err != nil {
 		log.Fatal(err)
+		return r, err
 	}
 
 	fmt.Printf("solutionId: %s\n", event.SolutionId)
+	return r, err
 }
 
-func Confirm(topics []common.Hash, data []byte) {
+func Confirm(vLog coreTypes.Log) (c otTypes.ConfirmEvent, err error) {
 	fmt.Println("Confirm")
 	event := struct {
-		SolutionId string
+		SolutionId    string
 		ArbitrationId string
 	}{}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(openTask.OpenTaskABI)))
 	if err != nil {
 		log.Fatal(err)
+		return c, err
 	}
-	err = contractAbi.Unpack(&event, "Confirm", data)
+	err = contractAbi.Unpack(&event, "Confirm", vLog.Data)
 	if err != nil {
 		log.Fatal(err)
+		return c, err
 	}
 
-	fmt.Printf("solutionId: %s, missionId: %s\n", event.SolutionId,event.ArbitrationId)
+	fmt.Printf("solutionId: %s, missionId: %s\n", event.SolutionId, event.ArbitrationId)
+	return c, err
 }

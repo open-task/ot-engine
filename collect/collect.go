@@ -74,23 +74,26 @@ confirmSigHash: %s
 			switch vLog.Topics[0].String() {
 			case publishSigHash.Hex():
 				fmt.Println("Publish")
-				row, err := Publish(vLog.Topics, vLog.Data)
+				row, err := Publish(vLog)
 				if err != nil {
 					continue
 				}
-				database.Publish(db, row)
+				err = database.Publish(db, row)
+				if err != nil {
+					log.Println("Got error when insert to database.")
+				}
 			case solveSigHash.Hex():
 				fmt.Println("Solve")
-				Solve(vLog.Topics, vLog.Data)
+				Solve(vLog)
 			case acceptSigHash.Hex():
 				fmt.Println("Accept")
-				Accept(vLog.Topics, vLog.Data)
+				Accept(vLog)
 			case rejectSigHash.Hex():
 				fmt.Println("Reject")
-				Reject(vLog.Topics, vLog.Data)
+				Reject(vLog)
 			case confirmSigHash.Hex():
 				fmt.Println("Confirm")
-				Confirm(vLog.Topics, vLog.Data)
+				Confirm(vLog)
 			default:
 				//
 				fmt.Println("UNKNOWN Event Log")

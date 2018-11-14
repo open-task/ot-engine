@@ -3,7 +3,7 @@ package types
 import "math/big"
 
 type PublishEvent struct {
-	Block int
+	Block uint64
 	Tx string
 	Mission string
 	Reward *big.Int
@@ -15,6 +15,7 @@ type SolveEvent struct {
 	Tx string
 	Solution string
 	Mission string
+	Data string
 }
 
 type AcceptEvent struct {
