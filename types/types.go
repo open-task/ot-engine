@@ -11,28 +11,29 @@ type PublishEvent struct {
 }
 
 type SolveEvent struct {
-	Block int
+	Block uint64
 	Tx string
 	Solution string
 	Mission string
 	Data string
+	Solver string
 }
 
 type AcceptEvent struct {
-	Block int
+	Block uint64
 	Tx string
 	Solution string
 }
 
 
 type RejectEvent struct {
-	Block int
+	Block uint64
 	Tx string
 	Solution string
 }
 
 type ConfirmEvent struct {
-	Block int
+	Block uint64
 	Tx string
 	Solution string
 	Arbitration string

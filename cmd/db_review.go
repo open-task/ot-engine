@@ -21,6 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Top 5 row:")
 	for rows.Next() {
 		var (
 			id      string

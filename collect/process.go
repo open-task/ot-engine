@@ -56,9 +56,11 @@ func Solve(vLog coreTypes.Log) (s otTypes.SolveEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s, missionId: %s, data: %s\n", event.SolutionId, event.MissionId, event.Data)
-	s.Solution=event.SolutionId
+	s.Solution = event.SolutionId
 	s.Mission = event.MissionId
 	s.Data = event.Data
+	s.Block = vLog.BlockNumber
+	s.Tx = vLog.TxHash.String()
 	return s, err
 }
 
@@ -79,6 +81,9 @@ func Accept(vLog coreTypes.Log) (a otTypes.AcceptEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s\n", event.SolutionId)
+	a.Solution = event.SolutionId
+	a.Block = vLog.BlockNumber
+	a.Tx = vLog.TxHash.String()
 	return a, err
 }
 
@@ -99,6 +104,9 @@ func Reject(vLog coreTypes.Log) (r otTypes.RejectEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s\n", event.SolutionId)
+	r.Solution = event.SolutionId
+	r.Block = vLog.BlockNumber
+	r.Tx = vLog.TxHash.String()
 	return r, err
 }
 
@@ -121,5 +129,9 @@ func Confirm(vLog coreTypes.Log) (c otTypes.ConfirmEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s, missionId: %s\n", event.SolutionId, event.ArbitrationId)
+	c.Solution = event.SolutionId
+	c.Arbitration = event.ArbitrationId
+	c.Block = vLog.BlockNumber
+	c.Tx = vLog.TxHash.String()
 	return c, err
 }

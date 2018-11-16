@@ -84,16 +84,44 @@ confirmSigHash: %s
 				}
 			case solveSigHash.Hex():
 				fmt.Println("Solve")
-				Solve(vLog)
+				row, err := Solve(vLog)
+				if err != nil {
+					continue
+				}
+				err = database.Solve(db, row)
+				if err != nil {
+					log.Println("Got error when insert to database.")
+				}
 			case acceptSigHash.Hex():
 				fmt.Println("Accept")
-				Accept(vLog)
+				row, err := Accept(vLog)
+				if err != nil {
+					continue
+				}
+				err = database.Accept(db, row)
+				if err != nil {
+					log.Println("Got error when insert to database.")
+				}
 			case rejectSigHash.Hex():
 				fmt.Println("Reject")
-				Reject(vLog)
+				row, err := Reject(vLog)
+				if err != nil {
+					continue
+				}
+				err = database.Reject(db, row)
+				if err != nil {
+					log.Println("Got error when insert to database.")
+				}
 			case confirmSigHash.Hex():
 				fmt.Println("Confirm")
-				Confirm(vLog)
+				row, err := Confirm(vLog)
+				if err != nil {
+					continue
+				}
+				err = database.Confirm(db, row)
+				if err != nil {
+					log.Println("Got error when insert to database.")
+				}
 			default:
 				//
 				fmt.Println("UNKNOWN Event Log")
