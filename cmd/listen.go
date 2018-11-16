@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"../decode/"
+	. "../decode"
 )
 
 func main() {
@@ -45,13 +45,15 @@ func main() {
 			fmt.Println(vLog) // pointer to event log
 			if len(vLog.Topics) >= 1 {
 				switch vLog.Topics[0].String() {
-				case decode.PublishSig:
+				case PublishSigHash.Hex():
 					fmt.Println("Publish")
-				case decode.SolveSig:
+				case SolveSigHash.Hex():
 					fmt.Println("Solve")
-				case decode.AcceptSig:
+				case AcceptSigHash.Hex():
 					fmt.Println("Accept")
-				case decode.RejectSig:
+				case RejectSigHash.Hex():
+					fmt.Println("Reject")
+				case ConfirmSigHash.Hex():
 					fmt.Println("Reject")
 				default:
 					//

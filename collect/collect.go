@@ -8,13 +8,10 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"math/big"
 	"context"
-	"github.com/ethereum/go-ethereum/crypto"
 	"database/sql"
-)
-
-import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/xyths/ot-engine/database"
+	. "github.com/xyths/ot-engine/decode"
 )
 
 func Collect(server string, address string, from int, to int, eventType string) {
@@ -41,25 +38,6 @@ func Collect(server string, address string, from int, to int, eventType string) 
 		log.Fatal(err)
 	}
 
-	publishSig := []byte("Publish(string,uint256)")
-	solveSig := []byte("Solve(string,string,string)")
-	acceptSig := []byte("Accept(string)")
-	rejectSig := []byte("Reject(string)")
-	confirmSig := []byte("Confirm(string,string)")
-
-	publishSigHash := crypto.Keccak256Hash(publishSig)
-	solveSigHash := crypto.Keccak256Hash(solveSig)
-	acceptSigHash := crypto.Keccak256Hash(acceptSig)
-	rejectSigHash := crypto.Keccak256Hash(rejectSig)
-	confirmSigHash := crypto.Keccak256Hash(confirmSig)
-
-	fmt.Printf(`publishSigHash: %s
-solveSigHash: %s
-acceptSigHash: %s
-rejectSigHash: %s
-confirmSigHash: %s
-`, publishSigHash.Hex(), solveSigHash.Hex(), acceptSigHash.Hex(), rejectSigHash.Hex(), confirmSigHash.Hex())
-
 	db, err := sql.Open("mysql", "engine:decopentask@/ot_local")
 	if err != nil {
 		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
@@ -72,7 +50,7 @@ confirmSigHash: %s
 		if len(vLog.Topics) >= 1 {
 			fmt.Printf("Sig(Topic0): %s\n", vLog.Topics[0].String())
 			switch vLog.Topics[0].String() {
-			case publishSigHash.Hex():
+			case PublishSigHash.Hex():
 				fmt.Println("Publish")
 				row, err := Publish(vLog)
 				if err != nil {
@@ -82,7 +60,7 @@ confirmSigHash: %s
 				if err != nil {
 					log.Println("Got error when insert to database.")
 				}
-			case solveSigHash.Hex():
+			case SolveSigHash.Hex():
 				fmt.Println("Solve")
 				row, err := Solve(vLog)
 				if err != nil {
@@ -92,7 +70,7 @@ confirmSigHash: %s
 				if err != nil {
 					log.Println("Got error when insert to database.")
 				}
-			case acceptSigHash.Hex():
+			case AcceptSigHash.Hex():
 				fmt.Println("Accept")
 				row, err := Accept(vLog)
 				if err != nil {
@@ -102,7 +80,7 @@ confirmSigHash: %s
 				if err != nil {
 					log.Println("Got error when insert to database.")
 				}
-			case rejectSigHash.Hex():
+			case RejectSigHash.Hex():
 				fmt.Println("Reject")
 				row, err := Reject(vLog)
 				if err != nil {
@@ -112,7 +90,7 @@ confirmSigHash: %s
 				if err != nil {
 					log.Println("Got error when insert to database.")
 				}
-			case confirmSigHash.Hex():
+			case ConfirmSigHash.Hex():
 				fmt.Println("Confirm")
 				row, err := Confirm(vLog)
 				if err != nil {
