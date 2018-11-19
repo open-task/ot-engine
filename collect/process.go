@@ -11,6 +11,7 @@ import (
 	otTypes "github.com/xyths/ot-engine/types"
 )
 
+// 解析Publish日志。
 func Publish(vLog coreTypes.Log) (p otTypes.PublishEvent, err error) {
 	event := struct {
 		MissionId   string

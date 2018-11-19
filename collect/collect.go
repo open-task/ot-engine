@@ -40,7 +40,7 @@ func Collect(server string, address string, from int, to int, eventType string) 
 
 	db, err := sql.Open("mysql", "engine:decopentask@/ot_local")
 	if err != nil {
-		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
+		log.Fatal(err)
 	}
 	defer db.Close()
 
