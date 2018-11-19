@@ -12,9 +12,17 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/xyths/ot-engine/database"
 	. "github.com/xyths/ot-engine/decode"
+	"github.com/xyths/ot-engine/config"
 )
 
-func Collect(server string, address string, from int, to int, eventType string) {
+func Collect(server string, address string, from int, to int, eventType string, configfile string) {
+	cfg, err := config.LoadConfig(configfile)
+	if server == "" {
+		server = cfg.Network
+	}
+	if address == "" {
+		address = cfg.Contract
+	}
 	client, err := ethclient.Dial(server)
 	if err != nil {
 		log.Fatal(err)
@@ -38,7 +46,7 @@ func Collect(server string, address string, from int, to int, eventType string) 
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open("mysql", "engine:decopentask@/ot_local")
+	db, err := sql.Open("mysql", cfg.Dsn())
 	if err != nil {
 		log.Fatal(err)
 	}

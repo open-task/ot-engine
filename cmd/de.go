@@ -19,6 +19,8 @@ var (
 	t int
 
 	e string
+
+	config string
 )
 
 func init() {
@@ -30,6 +32,7 @@ func init() {
 	flag.IntVar(&f, "f", 1, "block `from`")
 	flag.IntVar(&t, "t", 1, "block `to`")
 	flag.StringVar(&e, "e", "", "event `type`: p publish, a accept, r reject, c comfirm")
+	flag.StringVar(&config, "c", "config.json", "`config`: config file")
 
 	// 改变默认的 Usage
 	flag.Usage = usage
@@ -48,7 +51,7 @@ func main() {
 		return
 	}
 
-	download(n, a, f, t, e)
+	download(n, a, f, t, e, config)
 }
 
 func usage() {
@@ -60,11 +63,11 @@ Options:
 	flag.PrintDefaults()
 }
 
-func download(network string, address string, from int, to int, t string) {
+func download(network, address string, from, to int, t, config string) {
 	if network == "rinkeby" || network == "r" {
 		// rinkeby
 		fmt.Println("network is rinkeby.")
 		server := "https://rinkeby.infura.io/v3/e17969db9bc94e75a474b3d3c5257a75"
-		collect.Collect(server, address, from, to, t)
+		collect.Collect(server, address, from, to, t, config)
 	}
 }

@@ -32,10 +32,11 @@ func LoadConfig(filename string) (config Config, err error) {
 func (c Config) Dsn() (dsn string) {
 	dsn = c.Database.User + ":" + c.Database.Password + "@"
 	if c.Database.Host != "" {
-		dsn += c.Database.Host
-	}
-	if c.Database.Port != "" {
-		dsn += c.Database.Port
+		dsn += "tcp(" + c.Database.Host
+		if c.Database.Port != "" {
+			dsn += ":" + c.Database.Port
+		}
+		dsn += ")"
 	}
 
 	dsn += "/" + c.Database.Database

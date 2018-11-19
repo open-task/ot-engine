@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/big"
-
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -59,25 +57,19 @@ func main() {
 		return
 	}
 
-	cf, err := config.LoadConfig(configfile)
+	cfg, err := config.LoadConfig(configfile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("data source name: ", cf.Dsn())
-	//const Rinkeby= "https://rinkeby.infura.io/v3/e17969db9bc94e75a474b3d3c5257a75"
-	const Rinkeby= "wss://rinkeby.infura.io/ws/v3/e17969db9bc94e75a474b3d3c5257a75"
-	//const Rinkeby= "ws://172.31.24.221:8546"
-	const OpenTaskAddress= "0xF562a7c51a158ae6E6170Ef7905af5d1cE43d24A"
-	const FromBlock= 3244562;
+	fmt.Println("data source name: ", cfg.Dsn())
 
-	client, err := ethclient.Dial(Rinkeby)
+	client, err := ethclient.Dial(cfg.Network)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	contractAddress := common.HexToAddress(OpenTaskAddress)
+	contractAddress := common.HexToAddress(cfg.Contract)
 	query := ethereum.FilterQuery{
-		FromBlock: big.NewInt(FromBlock),
 		Addresses: []common.Address{contractAddress},
 	}
 
@@ -86,7 +78,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db, err := sql.Open("mysql", "engine:decopentask@/ot_local")
+	db, err := sql.Open("mysql", cfg.Dsn())
 	if err != nil {
 		log.Fatal(err)
 	}
