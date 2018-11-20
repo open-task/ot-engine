@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kanocz/goginjsonrpc"
+	"github.com/xyths/ot-engine/jsonrpc"
 )
 
 var db = make(map[string]string)
@@ -18,16 +20,19 @@ func setupRouter() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
+	rpc := jsonrpc.EngineRPC{}
+	r.POST("/v1/", func(c *gin.Context) { goginjsonrpc.ProcessJsonRPC(c, &rpc); })
+
 	// Get user value
-	r.GET("/user/:name", func(c *gin.Context) {
-		user := c.Params.ByName("name")
-		value, ok := db[user]
-		if ok {
-			c.JSON(http.StatusOK, gin.H{"user": user, "value": value})
-		} else {
-			c.JSON(http.StatusOK, gin.H{"user": user, "status": "no value"})
-		}
-	})
+	/*	r.GET("/user/:name", func(c *gin.Context) {
+			user := c.Params.ByName("name")
+			value, ok := db[user]
+			if ok {
+				c.JSON(http.StatusOK, gin.H{"user": user, "value": value})
+			} else {
+				c.JSON(http.StatusOK, gin.H{"user": user, "status": "no value"})
+			}
+		})*/
 
 	// Authorized group (uses gin.BasicAuth() middleware)
 	// Same than:
@@ -36,24 +41,24 @@ func setupRouter() *gin.Engine {
 	//	  "foo":  "bar",
 	//	  "manu": "123",
 	//}))
-	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
-		"foo":  "bar", // user:foo password:bar
-		"manu": "123", // user:manu password:123
-	}))
+	/*	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
+			"foo":  "bar", // user:foo password:bar
+			"manu": "123", // user:manu password:123
+		}))*/
 
-	authorized.POST("admin", func(c *gin.Context) {
-		user := c.MustGet(gin.AuthUserKey).(string)
+	/*	authorized.POST("admin", func(c *gin.Context) {
+			user := c.MustGet(gin.AuthUserKey).(string)
 
-		// Parse JSON
-		var json struct {
-			Value string `json:"value" binding:"required"`
-		}
+			// Parse JSON
+			var json struct {
+				Value string `json:"value" binding:"required"`
+			}
 
-		if c.Bind(&json) == nil {
-			db[user] = json.Value
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
-		}
-	})
+			if c.Bind(&json) == nil {
+				db[user] = json.Value
+				c.JSON(http.StatusOK, gin.H{"status": "ok"})
+			}
+		})*/
 
 	return r
 }
