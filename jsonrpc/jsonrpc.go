@@ -1,16 +1,14 @@
 package jsonrpc
 
+import "github.com/xyths/ot-engine/types"
 
 type EngineRPC struct {
-	counter int
+	Version string
 }
 
-func (t *EngineRPC) Add(arg int) int {
-	t.counter += arg
-	return t.counter
-}
-
-func (t *EngineRPC) Sub(arg int) int {
-	t.counter += arg
-	return t.counter
+func (t *EngineRPC) GetPublished(address string, limit int) (events []types.PublishEvent) {
+	var p types.PublishEvent
+	p.Mission = "m1"
+	events = append(events, p)
+	return events
 }

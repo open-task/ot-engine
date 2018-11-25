@@ -29,7 +29,7 @@ func LoadConfig(filename string) (config Config, err error) {
 	return config, err
 }
 
-func (c Config) Dsn() (dsn string) {
+func (c Config) DSN() (dsn string) {
 	dsn = c.Database.User + ":" + c.Database.Password + "@"
 	if c.Database.Host != "" {
 		dsn += "tcp(" + c.Database.Host

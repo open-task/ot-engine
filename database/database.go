@@ -10,7 +10,8 @@ func Publish(db *sql.DB, e types.PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
 	stmtIns, err := db.Prepare("INSERT INTO publish (mission_id, reward, publisher, block, tx) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	defer stmtIns.Close()
 
@@ -25,7 +26,8 @@ func Publish(db *sql.DB, e types.PublishEvent) (err error) {
 func Solve(db *sql.DB, e types.SolveEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO solve (solution_id, mission_id, context, solver, block, tx) VALUES(?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	defer stmtIns.Close()
 
@@ -40,7 +42,8 @@ func Solve(db *sql.DB, e types.SolveEvent) (err error) {
 func Accept(db *sql.DB, e types.AcceptEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO accept (solution_id, block, tx) VALUES(?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	defer stmtIns.Close()
 
@@ -55,7 +58,8 @@ func Accept(db *sql.DB, e types.AcceptEvent) (err error) {
 func Reject(db *sql.DB, e types.RejectEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO reject (solution_id, block, tx) VALUES(?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	defer stmtIns.Close()
 
@@ -70,7 +74,8 @@ func Reject(db *sql.DB, e types.RejectEvent) (err error) {
 func Confirm(db *sql.DB, e types.ConfirmEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO confirm (solution_id, arbitration_id, block, tx) VALUES(?, ?, ?)")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	defer stmtIns.Close()
 
@@ -80,4 +85,46 @@ func Confirm(db *sql.DB, e types.ConfirmEvent) (err error) {
 		return err
 	}
 	return err
+}
+
+func GetPublished(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+	stmt, err := db.Prepare("SELECT mission_id, reward, txtime FROM publish WHERE publisher = ? LIMIT ?")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(address, limit)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for rows.Next() {
+		var p types.PublishEvent
+		var txTime int
+		err = rows.Scan(&p.Mission, &p.Reward, &txTime)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		events = append(events, p)
+		_ = txTime
+	}
+	return events, err
+}
+
+func GetSolved(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+
+	return events, err
+}
+
+func GetAccepted(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+
+	return events, err
+}
+
+func GetRejected(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+
+	return events, err
 }

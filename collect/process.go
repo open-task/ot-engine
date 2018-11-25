@@ -35,6 +35,7 @@ func Publish(vLog types.Log) (p PublishEvent, err error) {
 	p.Reward = event.RewardInWei
 	p.Block = vLog.BlockNumber
 	p.Tx = vLog.TxHash.String()
+	p.Publisher = vLog.Address.Hex()
 	return p, err
 }
 
@@ -135,4 +136,8 @@ func Confirm(vLog types.Log) (c ConfirmEvent, err error) {
 	c.Block = vLog.BlockNumber
 	c.Tx = vLog.TxHash.String()
 	return c, err
+}
+
+func GetPublished(address string, limit int) (events []PublishEvent) {
+	return events
 }

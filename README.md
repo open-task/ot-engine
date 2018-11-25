@@ -13,10 +13,11 @@ git clone https://github.com/xyths/ot-engine.git
 ### 安装依赖
 
 ```
-go get -u github.com/gin-gonic/gin
-go get -u github.com/kardianos/govendor
-go get -u github.com/go-sql-driver/mysql
-go get -u github.com/ethereum/go-ethereum
+go get github.com/gin-gonic/gin
+go get github.com/kardianos/govendor
+go get github.com/go-sql-driver/mysql
+go get github.com/ethereum/go-ethereum
+go get github.com/kanocz/goginjsonrpc
 ```
 
 ### 准备数据库
