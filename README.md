@@ -26,10 +26,15 @@ go get github.com/kanocz/goginjsonrpc
 create database ot_local;
 CREATE USER 'engine'@'localhost' IDENTIFIED BY 'decopentask';
 GRANT ALL ON ot_local.* TO 'engine'@'localhost';
+```
+
+#### 创建测试表
+（可选）此表没别的用途，仅用于[测试数据库连接](#测试数据库连接)。
+```sql
 CREATE TABLE squareNum (number int PRIMARY KEY, squareNumber int);
 ```
 
-### 测试数据库
+### 测试数据库连接
 
 ```
 $ go run dbtest.go
@@ -37,8 +42,14 @@ The square number of 13 is: 169
 The square number of 1 is: 1
 ```
 
+## 部署
+
+```bash
+go install ./...
+```
+
 ### 启动服务
 
 ```
-go run main.go
+ot-engine
 ```

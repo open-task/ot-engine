@@ -46,7 +46,7 @@ func Collect(server string, address string, from int, to int, eventType string, 
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open("mysql", cfg.Dsn())
+	db, err := sql.Open("mysql", cfg.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}

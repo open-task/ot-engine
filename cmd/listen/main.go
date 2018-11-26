@@ -8,12 +8,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	. "../decode"
+	. "github.com/xyths/ot-engine/decode"
 	"github.com/xyths/ot-engine/database"
 	"github.com/xyths/ot-engine/collect"
 	"database/sql"
 	"flag"
-	"../config"
+	"github.com/xyths/ot-engine/config"
 )
 
 const version string = "0.1.0"
@@ -61,7 +61,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("data source name: ", cfg.Dsn())
+	fmt.Println("data source name: ", cfg.DSN())
 
 	client, err := ethclient.Dial(cfg.Network)
 	if err != nil {
@@ -78,7 +78,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	db, err := sql.Open("mysql", cfg.Dsn())
+	db, err := sql.Open("mysql", cfg.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
