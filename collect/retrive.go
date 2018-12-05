@@ -21,7 +21,7 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 		missions = append(missions, m)
 	}
 	solutions, err := GetSolutions(db, missionIdList)
-	if err!= nil {
+	if err != nil {
 		fmt.Printf("Error when GetSolutions: %s", err)
 		return missions, err
 	}
@@ -32,8 +32,8 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 
 func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, err error) {
 	solutions, ids, err := database.GetSolutions(db, missions)
-	processList, err := GetProcess(db,ids)
-	fillSolutions(solutions,processList)
+	processList, err := GetProcess(db, ids)
+	fillSolutions(solutions, processList)
 	return solutions, err
 }
 

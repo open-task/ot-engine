@@ -25,6 +25,7 @@ type ProcessEvent struct {
 	Block    uint64
 	Tx       string
 	Solution string
+	Time     string // type is string, just for output
 }
 type Process ProcessEvent
 type AcceptEvent ProcessEvent

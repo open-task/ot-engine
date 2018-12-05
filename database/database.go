@@ -106,7 +106,6 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 	}
 	for rows.Next() {
 		var p PublishEvent
-		var txTime int
 		var rewardStr sql.NullString
 		var txTimeStr sql.NullString
 		err = rows.Scan(&p.Mission, &rewardStr, &txTimeStr)
@@ -114,9 +113,8 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 			log.Println(err)
 			continue
 		}
-		p.Reward,_ = new(big.Int).SetString(rewardStr.String, 10)
+		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
 		events = append(events, p)
-		_ = txTime
 	}
 	return events, err
 }
@@ -126,9 +124,9 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 		err = errors.New("no mission id")
 		return
 	}
-	query := "SELECT mission_id, solution_id, context, solver FROM solve WHERE mission_id in ("
-	query += strings.Join(missions, ",")
-	query += ");"
+	query := "SELECT mission_id, solution_id, context, solver FROM solve WHERE mission_id in ('"
+	query += strings.Join(missions, "','")
+	query += "');"
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -159,26 +157,26 @@ func getProcessed(db *sql.DB, solutions []string, status string) (process []Proc
 		err = errors.New("status SHOULD be 'accept' or 'reject'")
 		return
 	}
-	query := "SELECT mission_id, solution_id, context, solver FROM "
+	query := "SELECT solution_id, txtime FROM "
 	query += status
-	query += " WHERE mission_id in ("
-	query += strings.Join(solutions, ",")
-	query += ");"
+	query += " WHERE solution_id in ('"
+	query += strings.Join(solutions, "','")
+	query += "');"
 
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Printf("Database Error when retrive solve: %s", err.Error())
+		fmt.Printf("Database Error when retrive %s: %s", status, err.Error())
 		return
 	}
 	for rows.Next() {
-		var s Solution
-		err1 := rows.Scan(&s.Mission, &s.Solution, &s.Data, &s.Solver)
+		var p Process
+		err1 := rows.Scan(&p.Solution, &p.Time)
 		if err1 != nil {
 			log.Println(err1)
 			continue
 		}
-		solutions = append(solutions, s.Solution)
-		ids = append(ids, s.Solution)
+		process = append(process, p)
+		ids = append(ids, p.Solution) // success ids
 	}
 
 	return
