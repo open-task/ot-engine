@@ -15,9 +15,133 @@ curl -s -X POST --data '{"jsonrpc":"2.0","method":"GetPublished","params":["0xF5
 
 // Result
 {
-  "id":"11",
+  "id": "11",
   "jsonrpc": "2.0",
-  "result": "0x0234c8a3397aab58" // 158972490234375000
+  "result": [
+    {
+      "Block": 0,
+      "Tx": "",
+      "Mission": "1",
+      "Reward": 100,
+      "Publisher": "",
+      "Solutions": null
+    },
+    {
+      "Block": 0,
+      "Tx": "",
+      "Mission": "m1",
+      "Reward": 101,
+      "Publisher": "",
+      "Solutions": [
+        {
+          "Block": 0,
+          "Tx": "",
+          "Solution": "m1s1",
+          "Mission": "m1",
+          "Data": "i solved m1",
+          "Solver": "",
+          "Status": "accept",
+          "Process": {
+            "Block": 0,
+            "Tx": "",
+            "Solution": "m1s1",
+            "Time": "2018-11-16 15:27:23",
+            "Status": "accept"
+          }
+        }
+      ]
+    },
+    {
+      "Block": 0,
+      "Tx": "",
+      "Mission": "m2",
+      "Reward": 102,
+      "Publisher": "",
+      "Solutions": [
+        {
+          "Block": 0,
+          "Tx": "",
+          "Solution": "m2s1",
+          "Mission": "m2",
+          "Data": "i solved m2",
+          "Solver": "",
+          "Status": "reject",
+          "Process": {
+            "Block": 0,
+            "Tx": "",
+            "Solution": "m2s1",
+            "Time": "2018-11-16 15:27:23",
+            "Status": "reject"
+          }
+        },
+        {
+          "Block": 0,
+          "Tx": "",
+          "Solution": "m2s2",
+          "Mission": "m2",
+          "Data": "i solved m2 too",
+          "Solver": "",
+          "Status": "accept",
+          "Process": {
+            "Block": 0,
+            "Tx": "",
+            "Solution": "m2s2",
+            "Time": "2018-11-16 15:27:23",
+            "Status": "accept"
+          }
+        }
+      ]
+    },
+    {
+      "Block": 0,
+      "Tx": "",
+      "Mission": "m2",
+      "Reward": 102,
+      "Publisher": "",
+      "Solutions": null
+    },
+    {
+      "Block": 0,
+      "Tx": "",
+      "Mission": "m3",
+      "Reward": 103,
+      "Publisher": "",
+      "Solutions": [
+        {
+          "Block": 0,
+          "Tx": "",
+          "Solution": "m3s1",
+          "Mission": "m3",
+          "Data": "i solved m3",
+          "Solver": "",
+          "Status": "reject",
+          "Process": {
+            "Block": 0,
+            "Tx": "",
+            "Solution": "m3s1",
+            "Time": "2018-11-16 15:27:23",
+            "Status": "reject"
+          }
+        },
+        {
+          "Block": 0,
+          "Tx": "",
+          "Solution": "m3s2",
+          "Mission": "m3",
+          "Data": "i solved m3 too",
+          "Solver": "",
+          "Status": "reject",
+          "Process": {
+            "Block": 0,
+            "Tx": "",
+            "Solution": "m3s2",
+            "Time": "2018-11-16 15:27:23",
+            "Status": "reject"
+          }
+        }
+      ]
+    }
+  ]
 }
 ```
 

@@ -39,21 +39,16 @@ type ConfirmEvent struct {
 	Arbitration string
 }
 
-const (
-	Unprocessed = 0
-	Accepted    = 1
-	Rejected    = -1
-)
-
 type ProcessStatus struct {
-	Status int // Unprocessed, Accepted, Rejected
-	Process    // AcceptEvent or RejectEvent
+	Status string // Unprocessed, Accepted, Rejected
+	Process       // AcceptEvent or RejectEvent
 	// TODO: Argue and Confirm
 }
 
 type Solution struct {
 	SolveEvent
-	ProcessStatus
+	Status string // Unprocessed, Accepted, Rejected
+	Process Process       // AcceptEvent or RejectEvent
 }
 
 type Mission struct {

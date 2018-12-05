@@ -58,6 +58,7 @@ func fillSolutions(solutions *[]Solution, process *[]Process) {
 		for j := range *solutions {
 			if (*process)[i].Solution == (*solutions)[j].Solution {
 				(*solutions)[j].Process = (*process)[i]
+				(*solutions)[j].Status = (*process)[i].Status
 				break
 			}
 		}
