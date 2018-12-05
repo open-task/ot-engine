@@ -22,14 +22,14 @@ var (
 	h bool
 	v bool
 
-	configfile string
+	configFile string
 )
 
 func init() {
 	flag.BoolVar(&h, "h", false, "this help")
 	flag.BoolVar(&v, "v", false, "show version and exit")
 
-	flag.StringVar(&configfile, "c", "config.json", "`config`: config file")
+	flag.StringVar(&configFile, "c", "config.json", "`config`: config file")
 
 	// 改变默认的 Usage
 	flag.Usage = usage
@@ -57,7 +57,7 @@ func main() {
 		return
 	}
 
-	cfg, err := config.LoadConfig(configfile)
+	cfg, err := config.LoadConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}

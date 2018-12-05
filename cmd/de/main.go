@@ -56,7 +56,7 @@ func main() {
 
 func usage() {
 	fmt.Fprintf(flag.CommandLine.Output(), `de: download event log from Ethereum Network, version: %s
-Usage: de [-hv] [-n network] [-a address] [-f from] [-t to] [-e type]
+Usage: de [-hv] [-n network] [-a address] [-f from] [-t to] [-e type] [-c config]
 
 Options:
 `, version)

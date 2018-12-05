@@ -6,11 +6,45 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kanocz/goginjsonrpc"
 	"github.com/xyths/ot-engine/jsonrpc"
+	"github.com/xyths/ot-engine/config"
+	"flag"
+	"fmt"
+	"log"
+	"database/sql"
 )
 
-var db = make(map[string]string)
+const version string = "0.1.0"
 
-func setupRouter() *gin.Engine {
+// 实际中应该用更好的变量名
+var (
+	h bool
+	v bool
+
+	configFile string
+)
+
+func init() {
+	flag.BoolVar(&h, "h", false, "this help")
+	flag.BoolVar(&v, "v", false, "show version and exit")
+
+	flag.StringVar(&configFile, "c", "config.json", "`config`: config file")
+
+	// 改变默认的 Usage
+	flag.Usage = usage
+}
+
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), `ot-engine: OpenTask Engine, version: %s
+Usage: de [-hv] [-c config]
+
+Options:
+`, version)
+	flag.PrintDefaults()
+}
+
+var db1 = make(map[string]string)
+
+func setupRouter(rpc *jsonrpc.EngineRPC) *gin.Engine {
 	// Disable Console Color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
@@ -20,13 +54,12 @@ func setupRouter() *gin.Engine {
 		c.String(http.StatusOK, "pong")
 	})
 
-	rpc := jsonrpc.EngineRPC{}
-	r.POST("/v1/", func(c *gin.Context) { goginjsonrpc.ProcessJsonRPC(c, &rpc) })
+	r.POST("/v1/", func(c *gin.Context) { goginjsonrpc.ProcessJsonRPC(c, rpc) })
 
 	// Get user value
 	/*	r.GET("/user/:name", func(c *gin.Context) {
 		user := c.Params.ByName("name")
-		value, ok := db[user]
+		value, ok := db1[user]
 		if ok {
 			c.JSON(http.StatusOK, gin.H{"user": user, "value": value})
 		} else {
@@ -55,7 +88,7 @@ func setupRouter() *gin.Engine {
 		}
 
 		if c.Bind(&json) == nil {
-			db[user] = json.Value
+			db1[user] = json.Value
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		}
 	})*/
@@ -64,7 +97,34 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
-	r := setupRouter()
+	flag.Parse()
+
+	if h {
+		flag.Usage()
+		return
+	}
+
+	if v {
+		fmt.Println("OpenTask Engine, version:", version)
+		return
+	}
+
+	cfg, err := config.LoadConfig(configFile)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("database: ", cfg.DSN())
+
+	db, err := sql.Open("mysql", cfg.DSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	rpc := jsonrpc.EngineRPC{Version: version, DB: db}
+
+	r := setupRouter(&rpc)
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
 }

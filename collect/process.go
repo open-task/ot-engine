@@ -137,7 +137,3 @@ func Confirm(vLog types.Log) (c ConfirmEvent, err error) {
 	c.Tx = vLog.TxHash.String()
 	return c, err
 }
-
-func GetPublished(address string, limit int) (events []PublishEvent) {
-	return events
-}

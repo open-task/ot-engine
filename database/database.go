@@ -2,11 +2,14 @@ package database
 
 import (
 	"database/sql"
-	"github.com/xyths/ot-engine/types"
+	. "github.com/xyths/ot-engine/types"
 	"log"
+	"errors"
+	"strings"
+	"fmt"
 )
 
-func Publish(db *sql.DB, e types.PublishEvent) (err error) {
+func Publish(db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
 	stmtIns, err := db.Prepare("INSERT INTO publish (mission_id, reward, publisher, block, tx) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
@@ -23,7 +26,7 @@ func Publish(db *sql.DB, e types.PublishEvent) (err error) {
 	return err
 }
 
-func Solve(db *sql.DB, e types.SolveEvent) (err error) {
+func Solve(db *sql.DB, e SolveEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO solve (solution_id, mission_id, context, solver, block, tx) VALUES(?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
@@ -39,7 +42,7 @@ func Solve(db *sql.DB, e types.SolveEvent) (err error) {
 	return err
 }
 
-func Accept(db *sql.DB, e types.AcceptEvent) (err error) {
+func Accept(db *sql.DB, e AcceptEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO accept (solution_id, block, tx) VALUES(?, ?, ?)")
 	if err != nil {
 		log.Println(err)
@@ -55,7 +58,7 @@ func Accept(db *sql.DB, e types.AcceptEvent) (err error) {
 	return err
 }
 
-func Reject(db *sql.DB, e types.RejectEvent) (err error) {
+func Reject(db *sql.DB, e RejectEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO reject (solution_id, block, tx) VALUES(?, ?, ?)")
 	if err != nil {
 		log.Println(err)
@@ -71,7 +74,7 @@ func Reject(db *sql.DB, e types.RejectEvent) (err error) {
 	return err
 }
 
-func Confirm(db *sql.DB, e types.ConfirmEvent) (err error) {
+func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
 	stmtIns, err := db.Prepare("INSERT INTO confirm (solution_id, arbitration_id, block, tx) VALUES(?, ?, ?)")
 	if err != nil {
 		log.Println(err)
@@ -87,7 +90,7 @@ func Confirm(db *sql.DB, e types.ConfirmEvent) (err error) {
 	return err
 }
 
-func GetPublished(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent, err error) {
 	stmt, err := db.Prepare("SELECT mission_id, reward, txtime FROM publish WHERE publisher = ? LIMIT ?")
 	if err != nil {
 		log.Println(err)
@@ -101,7 +104,7 @@ func GetPublished(db *sql.DB, address string, limit string) (events []types.Publ
 		return
 	}
 	for rows.Next() {
-		var p types.PublishEvent
+		var p PublishEvent
 		var txTime int
 		err = rows.Scan(&p.Mission, &p.Reward, &txTime)
 		if err != nil {
@@ -114,17 +117,81 @@ func GetPublished(db *sql.DB, address string, limit string) (events []types.Publ
 	return events, err
 }
 
-func GetSolved(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []string, err error) {
+	if len(missions) <= 0 {
+		err = errors.New("no mission id")
+		return
+	}
+	query := "SELECT mission_id, solution_id, context, solver FROM solve WHERE mission_id in ("
+	query += strings.Join(missions, ",")
+	query += ");"
 
-	return events, err
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Printf("Database Error when retrive solve: %s", err.Error())
+		return
+	}
+	for rows.Next() {
+		var s Solution
+		err1 := rows.Scan(&s.Mission, &s.Solution, &s.Data, &s.Solver)
+		if err1 != nil {
+			log.Println(err1)
+			continue
+		}
+		solutions = append(solutions, s)
+		ids = append(ids, s.Solution)
+	}
+
+	return
 }
 
-func GetAccepted(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
+func getProcessed(db *sql.DB, solutions []string, status string) (process []Process, ids []string, err error) {
+	if len(solutions) <= 0 {
+		err = errors.New("no solution id")
+		return
+	}
+	status = strings.ToLower(status)
+	if status != "reject" && status != "accept" {
+		err = errors.New("status SHOULD be 'accept' or 'reject'")
+		return
+	}
+	query := "SELECT mission_id, solution_id, context, solver FROM "
+	query += status
+	query += " WHERE mission_id in ("
+	query += strings.Join(solutions, ",")
+	query += ");"
 
-	return events, err
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Printf("Database Error when retrive solve: %s", err.Error())
+		return
+	}
+	for rows.Next() {
+		var s Solution
+		err1 := rows.Scan(&s.Mission, &s.Solution, &s.Data, &s.Solver)
+		if err1 != nil {
+			log.Println(err1)
+			continue
+		}
+		solutions = append(solutions, s)
+		ids = append(ids, s.Solution)
+	}
+
+	return
 }
 
-func GetRejected(db *sql.DB, address string, limit string) (events []types.PublishEvent, err error) {
-
-	return events, err
+func GetProcess(db *sql.DB, solutions string) (process []Process, ids []string, err error) {
+	p1, l1, e1 := getProcessed(db, solutions, "accept")
+	if e1 != nil {
+		fmt.Println(e1)
+		return
+	}
+	p2, l2, e2 := getProcessed(db, address, "reject")
+	if e2 != nil {
+		fmt.Println(e2)
+		return
+	}
+	process = append(p1, p2...)
+	ids = append(l1, l2...)
+	return
 }
