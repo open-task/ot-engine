@@ -18,6 +18,7 @@ func (e *EngineRPC) GetPublished(address string, limit int) (missions []types.Mi
 		fmt.Printf("Error When GetMission: %s", err.Error())
 	} else {
 		missions = missions1
+		fmt.Println(missions1)
 	}
 	return missions
 }

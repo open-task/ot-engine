@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strings"
 	"fmt"
+	"math/big"
 )
 
 func Publish(db *sql.DB, e PublishEvent) (err error) {
@@ -106,11 +107,14 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 	for rows.Next() {
 		var p PublishEvent
 		var txTime int
-		err = rows.Scan(&p.Mission, &p.Reward, &txTime)
+		var rewardStr sql.NullString
+		var txTimeStr sql.NullString
+		err = rows.Scan(&p.Mission, &rewardStr, &txTimeStr)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+		p.Reward,_ = new(big.Int).SetString(rewardStr.String, 10)
 		events = append(events, p)
 		_ = txTime
 	}
@@ -173,20 +177,20 @@ func getProcessed(db *sql.DB, solutions []string, status string) (process []Proc
 			log.Println(err1)
 			continue
 		}
-		solutions = append(solutions, s)
+		solutions = append(solutions, s.Solution)
 		ids = append(ids, s.Solution)
 	}
 
 	return
 }
 
-func GetProcess(db *sql.DB, solutions string) (process []Process, ids []string, err error) {
+func GetProcess(db *sql.DB, solutions []string) (process []Process, ids []string, err error) {
 	p1, l1, e1 := getProcessed(db, solutions, "accept")
 	if e1 != nil {
 		fmt.Println(e1)
 		return
 	}
-	p2, l2, e2 := getProcessed(db, address, "reject")
+	p2, l2, e2 := getProcessed(db, solutions, "reject")
 	if e2 != nil {
 		fmt.Println(e2)
 		return

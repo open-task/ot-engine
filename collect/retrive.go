@@ -38,8 +38,8 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, err erro
 }
 
 func GetProcess(db *sql.DB, solutions []string) (process []Process, err error) {
-	solutions, ids, err := database.GetProcess(db, solutions)
-	return solutions, err
+	process, _, err = database.GetProcess(db, solutions)
+	return process, err
 }
 
 func fillMissions(missions []Mission, solutions []Solution) {

@@ -11,7 +11,7 @@
 ### Example
 ```
 // Request
-curl -X POST --data '{"jsonrpc":"2.0","method":"GetPublished","params":["0xc94770007dda54cF92009BFF0dE90c06F603a09f", "latest"],"id":"11"}'
+curl -s -X POST --data '{"jsonrpc":"2.0","method":"GetPublished","params":["0xF562a7c51a158ae6E6170Ef7905af5d1cE43d24A", 5],"id":"11"}' 'http://localhost:8080/v1/' | jq .
 
 // Result
 {
