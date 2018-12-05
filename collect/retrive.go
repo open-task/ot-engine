@@ -25,7 +25,7 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 		fmt.Printf("Error when GetSolutions: %s", err)
 		return missions, err
 	}
-	fillMissions(missions, solutions)
+	fillMissions(&missions, &solutions)
 
 	return missions, err
 }
@@ -33,7 +33,7 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, err error) {
 	solutions, ids, err := database.GetSolutions(db, missions)
 	processList, err := GetProcess(db, ids)
-	fillSolutions(solutions, processList)
+	fillSolutions(&solutions, &processList)
 	return solutions, err
 }
 
@@ -42,10 +42,24 @@ func GetProcess(db *sql.DB, solutions []string) (process []Process, err error) {
 	return process, err
 }
 
-func fillMissions(missions []Mission, solutions []Solution) {
-
+func fillMissions(missions *[]Mission, solutions *[]Solution) {
+	for i := range *solutions {
+		for j := range *missions {
+			if (*solutions)[i].Mission == (*missions)[j].Mission {
+				(*missions)[j].Solutions = append((*missions)[j].Solutions, (*solutions)[i])
+				break
+			}
+		}
+	}
 }
 
-func fillSolutions(solutions []Solution, process []Process) {
-
+func fillSolutions(solutions *[]Solution, process *[]Process) {
+	for i := range *process {
+		for j := range *solutions {
+			if (*process)[i].Solution == (*solutions)[j].Solution {
+				(*solutions)[j].Process = (*process)[i]
+				break
+			}
+		}
+	}
 }

@@ -26,6 +26,7 @@ type ProcessEvent struct {
 	Tx       string
 	Solution string
 	Time     string // type is string, just for output
+	Status   string // accept or reject
 }
 type Process ProcessEvent
 type AcceptEvent ProcessEvent

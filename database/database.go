@@ -175,6 +175,7 @@ func getProcessed(db *sql.DB, solutions []string, status string) (process []Proc
 			log.Println(err1)
 			continue
 		}
+		p.Status = status
 		process = append(process, p)
 		ids = append(ids, p.Solution) // success ids
 	}
