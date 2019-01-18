@@ -13,7 +13,7 @@
 ### Example
 ```
 // Request
-curl -s -X POST --data '{"jsonrpc":"2.0","method":"GetPublished","params":[0, 5],"id":"11"}' 'http://localhost:8080/v1/' | jq .
+curl -s -X POST --data '{"jsonrpc":"2.0","method":"GetAllPublished","params":[0, 5],"id":"11"}' 'http://localhost:8080/v1/' | jq .
 
 // Result
 {
