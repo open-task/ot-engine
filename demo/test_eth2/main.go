@@ -21,8 +21,6 @@ func main() {
 		fmt.Println("we have a connection now.")
 	}
 
-	_ = client // we'll use this in the upcoming sections
-
 	contractAddress := common.HexToAddress("0xEB6af3deD23E2FA790C2D72B68e21dCC05c439d4") // Rinkeby
 
 	// filter logs
