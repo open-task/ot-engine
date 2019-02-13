@@ -91,6 +91,34 @@ func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
 	return err
 }
 
+func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
+	stmt, err := db.Prepare("SELECT mission_id, reward, txtime FROM publish LIMIT ?, ?")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(offset, limit)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for rows.Next() {
+		var p PublishEvent
+		var rewardStr sql.NullString
+		var txTimeStr sql.NullString
+		err = rows.Scan(&p.Mission, &rewardStr, &txTimeStr)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
+		events = append(events, p)
+	}
+	return events, err
+}
+
 func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent, err error) {
 	stmt, err := db.Prepare("SELECT mission_id, reward, txtime FROM publish WHERE publisher = ? LIMIT ?")
 	if err != nil {

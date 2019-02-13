@@ -7,6 +7,29 @@ import (
 	"fmt"
 )
 
+func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
+	publishList, err := database.GetAllPublished(db, offset, limit)
+	if err != nil {
+		fmt.Printf("Error when GetMission: %s", err)
+		return missions, err
+	}
+	var missionIdList []string
+	for _, p := range publishList {
+		var m Mission
+		m.PublishEvent = p
+		missionIdList = append(missionIdList, p.Mission)
+		missions = append(missions, m)
+	}
+	solutions, err := GetSolutions(db, missionIdList)
+	if err != nil {
+		fmt.Printf("Error when GetSolutions: %s", err)
+		return missions, err
+	}
+	fillMissions(&missions, &solutions)
+
+	return missions, err
+}
+
 func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err error) {
 	publishList, err := database.GetPublished(db, address, limit)
 	if err != nil {

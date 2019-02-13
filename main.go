@@ -13,7 +13,7 @@ import (
 	"database/sql"
 )
 
-const version string = "0.1.0"
+const version string = "0.1.1"
 
 // 实际中应该用更好的变量名
 var (
