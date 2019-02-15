@@ -6,6 +6,6 @@
     "password": "decopentask",
     "database": "ot_local"
   },
-  "network": "rinkeby",
+  "network": "wss://rinkeby.infura.io/ws/v3/e17969db9bc94e75a474b3d3c5257a75",
   "contract": "0xF562a7c51a158ae6E6170Ef7905af5d1cE43d24A"
 }
