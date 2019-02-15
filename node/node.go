@@ -12,6 +12,7 @@ type Config struct {
 	ToFlag    bool     `json:"to_flag"`
 	ToBlock   *big.Int `json:"to_block"`
 }
+
 type Node struct {
 	Config *Config
 }

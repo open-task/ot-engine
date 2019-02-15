@@ -1,26 +1,34 @@
 package main
 
 import (
-	"os"
-	"fmt"
 	"encoding/json"
-
+	"fmt"
+	"github.com/xyths/ot-engine/engine"
 	"gopkg.in/urfave/cli.v2"
 	"log"
-	"github.com/xyths/ot-engine/node"
-	"github.com/xyths/ot-engine/cmd/utils"
 	"math/big"
+	"os"
+
+	"github.com/xyths/ot-engine/cmd/utils"
+	"github.com/xyths/ot-engine/node"
 )
 
+type HTTPConfig struct {
+	Port string `json:port`
+}
+
+type DatabaseConfig struct {
+	Host     string `json:"host"`
+	Port     string `json:port`
+	User     string `json:user`
+	Password string `json:"password"`
+	Database string `json:"database"`
+}
+
 type Config struct {
-	Database struct {
-		Host     string `json:"host"`
-		Port     string `json:port`
-		User     string `json:user`
-		Password string `json:"password"`
-		Database string `json:"database"`
-	} `json:"database"`
-	Node node.Config `json:"node"`
+	Database DatabaseConfig `json:"database"`
+	Http     HTTPConfig     `json:http`
+	Node     node.Config    `json:"node"`
 }
 
 func (c Config) DSN() (dsn string) {
@@ -37,27 +45,13 @@ func (c Config) DSN() (dsn string) {
 	return dsn
 }
 
-func defaultNodeConfig() node.Config {
-	cfg := node.DefaultConfig
-	return cfg
+func (c Config) Address() (string) {
+	return ":" + c.Http.Port
 }
 
-func makeConfigNode(ctx *cli.Context) (*node.Node) {
-	// Load defaults.
-	cfg := DefaultConfig()
-
-	// Load config file.
-	if file := ctx.String(utils.ConfigFlag.Name); file != "" {
-		if err := cfg.Load(file); err != nil {
-			log.Fatalf("%v", err)
-		}
-	}
-	stack, err := node.New(&cfg.Node)
-	if err != nil {
-		log.Fatalf("Failed to create the stack: %v", err)
-	}
-
-	return stack
+func DefaultConfig() (config Config) {
+	config.Node = node.DefaultConfig
+	return config
 }
 
 func (c *Config) Load(file string) (err error) {
@@ -79,7 +73,37 @@ func (c *Config) Load(file string) (err error) {
 	return err
 }
 
-func DefaultConfig() (config Config) {
-	config.Node = node.DefaultConfig
-	return config
+func LoadConfig(ctx *cli.Context) Config {
+
+	// Load defaults.
+	cfg := DefaultConfig()
+
+	// Load config file.
+	if file := ctx.String(utils.ConfigFlag.Name); file != "" {
+		if err := cfg.Load(file); err != nil {
+			log.Fatalf("%v", err)
+		}
+	}
+	return cfg
+}
+
+func makeConfigNode(ctx *cli.Context) (*node.Node) {
+	cfg := LoadConfig(ctx)
+	stack, err := node.New(&cfg.Node)
+	if err != nil {
+		log.Fatalf("Failed to create the stack: %v", err)
+	}
+
+	return stack
+}
+
+func makeConfigEngine(ctx *cli.Context) (*engine.OtEngineServer) {
+	cfg := LoadConfig(ctx)
+	eCfg := engine.Config{Address: cfg.Address(), DSN: cfg.DSN()}
+	stack, err := engine.New(&eCfg)
+	if err != nil {
+		log.Fatalf("Failed to create the stack: %v", err)
+	}
+
+	return stack
 }

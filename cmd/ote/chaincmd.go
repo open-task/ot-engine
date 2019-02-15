@@ -1,17 +1,15 @@
 package main
 
 import (
-	"github.com/xyths/ot-engine/process"
+	"context"
+	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"net/http"
+	"github.com/xyths/ot-engine/process"
 	"gopkg.in/urfave/cli.v2"
-	"github.com/gin-gonic/gin"
-	"fmt"
 	"log"
-	"context"
 )
 
 var (
@@ -79,14 +77,9 @@ func de(ctx *cli.Context) (err error) {
 }
 
 func serve(ctx *cli.Context) error {
-	r := gin.Default()
-
-	// Ping test
-	r.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
-	})
-
-	r.Run(":8080")
+	engine := makeConfigEngine(ctx)
+	engine.Setup()
+	engine.Serve()
 	return nil
 }
 
