@@ -3,6 +3,8 @@ package engine
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/kanocz/goginjsonrpc"
+	"github.com/xyths/ot-engine/jsonrpc"
 	"log"
 	"net/http"
 )
@@ -32,6 +34,11 @@ func (e *OtEngineServer) Setup() {
 	// Health Check
 	e.Engine.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "pong")
+	})
+
+	rpc := jsonrpc.EngineRPC{Version: "0.2.0", DB: e.DB}
+	e.Engine.POST("/v2/", func(c *gin.Context) {
+		goginjsonrpc.ProcessJsonRPC(c, rpc)
 	})
 
 	db, err := sql.Open("mysql", e.Config.DSN)
