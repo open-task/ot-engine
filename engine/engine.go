@@ -19,6 +19,7 @@ type OtEngineServer struct {
 	Config *Config
 	Engine *gin.Engine
 	DB     *sql.DB
+	RPC    *jsonrpc.EngineRPC
 }
 
 func New(conf *Config) (*OtEngineServer, error) {
@@ -28,6 +29,11 @@ func New(conf *Config) (*OtEngineServer, error) {
 }
 
 func (e *OtEngineServer) Setup() {
+	db, err := sql.Open("mysql", e.Config.DSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+	e.DB = db
 
 	e.Engine = gin.Default()
 
@@ -36,16 +42,10 @@ func (e *OtEngineServer) Setup() {
 		c.String(http.StatusOK, "pong")
 	})
 
-	rpc := jsonrpc.EngineRPC{Version: "0.2.0", DB: e.DB}
+	e.RPC = &jsonrpc.EngineRPC{Version: "0.2.0", DB: e.DB}
 	e.Engine.POST("/v2/", func(c *gin.Context) {
-		goginjsonrpc.ProcessJsonRPC(c, rpc)
+		goginjsonrpc.ProcessJsonRPC(c, e.RPC)
 	})
-
-	db, err := sql.Open("mysql", e.Config.DSN)
-	if err != nil {
-		log.Fatal(err)
-	}
-	e.DB = db
 }
 
 func (e *OtEngineServer) Serve() {
