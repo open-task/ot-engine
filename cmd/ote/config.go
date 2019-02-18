@@ -45,7 +45,7 @@ func (c Config) DSN() (dsn string) {
 	return dsn
 }
 
-func (c Config) Address() (string) {
+func (c Config) Address() string {
 	return ":" + c.Http.Port
 }
 
@@ -87,7 +87,7 @@ func LoadConfig(ctx *cli.Context) Config {
 	return cfg
 }
 
-func makeConfigNode(ctx *cli.Context) (*node.Node) {
+func makeConfigNode(ctx *cli.Context) *node.Node {
 	cfg := LoadConfig(ctx)
 	stack, err := node.New(&cfg.Node)
 	if err != nil {
@@ -97,7 +97,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node) {
 	return stack
 }
 
-func makeConfigEngine(ctx *cli.Context) (*engine.OtEngineServer) {
+func makeConfigEngine(ctx *cli.Context) *engine.OtEngineServer {
 	cfg := LoadConfig(ctx)
 	eCfg := engine.Config{Address: cfg.Address(), DSN: cfg.DSN()}
 	stack, err := engine.New(&eCfg)

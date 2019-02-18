@@ -1,51 +1,73 @@
 package process
 
 import (
-	"github.com/ethereum/go-ethereum/core/types"
-	otTypes "github.com/xyths/ot-engine/types"
-	"math/big"
-	"log"
+	"database/sql"
 	"fmt"
-	"strings"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/xyths/ot-engine/contracts"
+	"github.com/xyths/ot-engine/database"
 	. "github.com/xyths/ot-engine/decode"
+	otTypes "github.com/xyths/ot-engine/types"
+	"log"
+	"math/big"
+	"strings"
 )
 
-func ParseOTLog(vLog types.Log) (err error) {
+func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
 	switch vLog.Topics[0].String() {
 	case PublishSigHash.Hex():
 		fmt.Println("Publish")
 		row, err1 := Publish(vLog)
+		if err1 != nil {
+			return err1
+		}
 		fmt.Println(row)
+		err1 = database.Publish(db, row)
 		if err1 != nil {
 			return err1
 		}
 	case SolveSigHash.Hex():
 		fmt.Println("Solve")
 		row, err1 := Solve(vLog)
+		if err1 != nil {
+			return err1
+		}
 		fmt.Println(row)
+		err1 = database.Solve(db, row)
 		if err1 != nil {
 			return err1
 		}
 	case AcceptSigHash.Hex():
 		fmt.Println("Accept")
 		row, err1 := Accept(vLog)
+		if err1 != nil {
+			return err1
+		}
 		fmt.Println(row)
+		err1 = database.Accept(db, row)
 		if err1 != nil {
 			return err1
 		}
 	case RejectSigHash.Hex():
 		fmt.Println("Reject")
 		row, err1 := Reject(vLog)
+		if err1 != nil {
+			return err1
+		}
 		fmt.Println(row)
+		err1 = database.Reject(db, row)
 		if err1 != nil {
 			return err1
 		}
 	case ConfirmSigHash.Hex():
 		fmt.Println("Confirm")
 		row, err1 := Confirm(vLog)
+		if err1 != nil {
+			return err1
+		}
 		fmt.Println(row)
+		err1 = database.Confirm(db, row)
 		if err1 != nil {
 			return err1
 		}
@@ -58,7 +80,7 @@ func ParseOTLog(vLog types.Log) (err error) {
 func Publish(vLog types.Log) (p otTypes.PublishEvent, err error) {
 	event := struct {
 		MissionId string
-		Reward    *big.Int
+		RewardInWei    *big.Int
 	}{}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(contracts.OpenTaskABI)))
@@ -72,10 +94,10 @@ func Publish(vLog types.Log) (p otTypes.PublishEvent, err error) {
 		return p, err
 	}
 
-	fmt.Printf("missionId: %s, reward: %s\n\n", event.MissionId, event.Reward.String())
+	fmt.Printf("missionId: %s, reward: %s\n\n", event.MissionId, event.RewardInWei.String())
 
 	p.Mission = event.MissionId
-	p.Reward = event.Reward
+	p.Reward = event.RewardInWei
 	p.Block = vLog.BlockNumber
 	p.Tx = vLog.TxHash.String()
 	p.Publisher = vLog.Address.Hex()

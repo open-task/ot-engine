@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -14,8 +15,8 @@ import (
 
 var (
 	deCommand = &cli.Command{
-		Action:  de,
-		Name:    "de",
+		Action:  download,
+		Name:    "download",
 		Aliases: []string{"d"},
 		Usage:   "Download event log from blockchain",
 		Flags: []cli.Flag{
@@ -25,7 +26,7 @@ var (
 		Action:  serve,
 		Name:    "serve",
 		Aliases: []string{"s"},
-		Usage:   "serve as a HTTP server",
+		Usage:   "Serve as a HTTP server",
 		Flags: []cli.Flag{
 		},
 	}
@@ -33,32 +34,32 @@ var (
 		Action:  listen,
 		Name:    "listen",
 		Aliases: []string{"l"},
-		Usage:   "Listen to blockchain and process event log",
+		Usage:   "Listen to blockchain and process the event log",
 		Flags: []cli.Flag{
 		},
 	}
 )
 
-func de(ctx *cli.Context) (err error) {
-	stack := makeConfigNode(ctx)
-	fmt.Printf("server: %s, contract: %s\n", stack.Config.Server, stack.Config.Contract)
+func download(ctx *cli.Context) (err error) {
+	cfg := LoadConfig(ctx)
+	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
 
-	client, err := ethclient.Dial(stack.Config.Server)
+	client, err := ethclient.Dial(cfg.Node.Server)
 	if err != nil {
 		log.Fatal(err)
 	} else {
 		fmt.Println("we have a connection now.")
 	}
 
-	address := common.HexToAddress(stack.Config.Contract)
+	address := common.HexToAddress(cfg.Node.Contract)
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{address},
 	}
-	if stack.Config.FromFlag {
-		query.FromBlock = stack.Config.FromBlock
+	if cfg.Node.FromFlag {
+		query.FromBlock = cfg.Node.FromBlock
 	}
-	if stack.Config.ToFlag {
-		query.ToBlock = stack.Config.ToBlock
+	if cfg.Node.ToFlag {
+		query.ToBlock = cfg.Node.ToBlock
 	}
 	logs, err := client.FilterLogs(context.Background(), query)
 
@@ -66,10 +67,16 @@ func de(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
+	db, err := sql.Open("mysql", cfg.DSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for i, vLog := range logs {
 		fmt.Printf("TxHash[%d]: %s\n", i, vLog.TxHash.Hex())
-		err := process.ParseOTLog(vLog)
+		err := process.ParseOTLog(vLog, db)
 		if err != nil {
+			fmt.Println(err)
 			continue
 		}
 	}
@@ -84,17 +91,17 @@ func serve(ctx *cli.Context) error {
 }
 
 func listen(ctx *cli.Context) (err error) {
-	stack := makeConfigNode(ctx)
-	fmt.Printf("server: %s, contract: %s\n", stack.Config.Server, stack.Config.Contract)
+	cfg := LoadConfig(ctx)
+	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
 
-	client, err := ethclient.Dial(stack.Config.Server)
+	client, err := ethclient.Dial(cfg.Node.Server)
 	if err != nil {
 		log.Fatal(err)
 	} else {
 		fmt.Println("we have a connection now.")
 	}
 
-	address := common.HexToAddress(stack.Config.Contract)
+	address := common.HexToAddress(cfg.Node.Contract)
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{address},
 	}
@@ -105,13 +112,19 @@ func listen(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
+	db, err := sql.Open("mysql", cfg.DSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for {
 		select {
 		case err := <-sub.Err():
 			fmt.Println(err)
 		case vLog := <-logs:
-			err := process.ParseOTLog(vLog)
+			err := process.ParseOTLog(vLog, db)
 			if err != nil {
+				fmt.Println(err)
 				continue
 			}
 		}
