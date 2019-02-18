@@ -43,7 +43,7 @@ func (e *OtEngineServer) Setup() {
 	})
 
 	e.RPC = &jsonrpc.EngineRPC{Version: "0.2.0", DB: e.DB}
-	e.Engine.POST("/v2/", func(c *gin.Context) {
+	e.Engine.POST("/v1/", func(c *gin.Context) {
 		goginjsonrpc.ProcessJsonRPC(c, e.RPC)
 	})
 }
