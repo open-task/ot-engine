@@ -9,4 +9,15 @@ var (
 		Value:   "config.json",
 		Usage:   "Load configuration from `file`",
 	}
+
+	FromFlag = &cli.Int64Flag{
+		Name:    "from",
+		Aliases: []string{"f"},
+		Usage:   "download `FROM` this block number",
+	}
+	ToFlag = &cli.Int64Flag{
+		Name:    "to",
+		Aliases: []string{"t"},
+		Usage:   "download `TO` this block number",
+	}
 )

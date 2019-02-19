@@ -8,9 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/xyths/ot-engine/cmd/utils"
 	"github.com/xyths/ot-engine/process"
 	"gopkg.in/urfave/cli.v2"
 	"log"
+	"math/big"
 )
 
 var (
@@ -20,6 +22,8 @@ var (
 		Aliases: []string{"d"},
 		Usage:   "Download event log from blockchain",
 		Flags: []cli.Flag{
+			utils.FromFlag,
+			utils.ToFlag,
 		},
 	}
 	serveCommand = &cli.Command{
@@ -44,23 +48,33 @@ func download(ctx *cli.Context) (err error) {
 	cfg := LoadConfig(ctx)
 	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
 
+	from := ctx.Int64(utils.FromFlag.Name)
+	to := ctx.Int64(utils.ToFlag.Name)
+
 	client, err := ethclient.Dial(cfg.Node.Server)
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		fmt.Println("we have a connection now.")
 	}
 
 	address := common.HexToAddress(cfg.Node.Contract)
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{address},
 	}
-	if cfg.Node.FromFlag {
-		query.FromBlock = cfg.Node.FromBlock
+	if from != 0 {
+		query.FromBlock = big.NewInt(from)
+	} else {
+		if cfg.Node.FromFlag {
+			query.FromBlock = cfg.Node.FromBlock
+		}
 	}
-	if cfg.Node.ToFlag {
-		query.ToBlock = cfg.Node.ToBlock
+	if to != 0 {
+		query.ToBlock = big.NewInt(to)
+	} else {
+		if cfg.Node.ToFlag {
+			query.ToBlock = cfg.Node.ToBlock
+		}
 	}
+
 	logs, err := client.FilterLogs(context.Background(), query)
 
 	if err != nil {
@@ -97,8 +111,6 @@ func listen(ctx *cli.Context) (err error) {
 	client, err := ethclient.Dial(cfg.Node.Server)
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		fmt.Println("we have a connection now.")
 	}
 
 	address := common.HexToAddress(cfg.Node.Contract)
