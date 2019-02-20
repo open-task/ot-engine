@@ -2,40 +2,39 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	. "github.com/xyths/ot-engine/types"
 	"log"
-	"errors"
-	"strings"
-	"fmt"
 	"math/big"
+	"strings"
 )
 
 func Publish(db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
-	stmtIns, err := db.Prepare("INSERT INTO publish (mission_id, reward, publisher, block, tx) VALUES(?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO publish (mission_id, reward, publisher, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(e.Mission, e.Reward.String(), e.Publisher, e.Block, e.Tx)
+	_, err = stmtIns.Exec(e.Mission, e.Reward.String(), e.Publisher, e.Block, e.Tx, e.TxTime)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	return err
 }
 
 func Solve(db *sql.DB, e SolveEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO solve (solution_id, mission_id, context, solver, block, tx) VALUES(?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO solve (solution_id, mission_id, context, solver, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(e.Solution, e.Mission, e.Data, e.Solver, e.Block, e.Tx)
+	_, err = stmtIns.Exec(e.Solution, e.Mission, e.Data, e.Solver, e.Block, e.Tx, e.TxTime)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -44,14 +43,14 @@ func Solve(db *sql.DB, e SolveEvent) (err error) {
 }
 
 func Accept(db *sql.DB, e AcceptEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO accept (solution_id, block, tx) VALUES(?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO accept (solution_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(e.Solution, e.Block, e.Tx)
+	_, err = stmtIns.Exec(e.Solution, e.Block, e.Tx, e.TxTime)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -60,14 +59,14 @@ func Accept(db *sql.DB, e AcceptEvent) (err error) {
 }
 
 func Reject(db *sql.DB, e RejectEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO reject (solution_id, block, tx) VALUES(?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO reject (solution_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(e.Solution, e.Block, e.Tx)
+	_, err = stmtIns.Exec(e.Solution, e.Block, e.Tx, e.TxTime)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -76,14 +75,14 @@ func Reject(db *sql.DB, e RejectEvent) (err error) {
 }
 
 func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO confirm (solution_id, arbitration_id, block, tx) VALUES(?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO confirm (solution_id, arbitration_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(e.Solution, e.Arbitration, e.Block, e.Tx)
+	_, err = stmtIns.Exec(e.Solution, e.Arbitration, e.Block, e.Tx, e.TxTime)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -92,7 +91,7 @@ func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
 }
 
 func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT mission_id, reward, txtime FROM publish LIMIT ?, ?")
+	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, publisher, txtime FROM publish LIMIT ?, ?")
 	if err != nil {
 		log.Println(err)
 		return
@@ -107,8 +106,7 @@ func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, 
 	for rows.Next() {
 		var p PublishEvent
 		var rewardStr sql.NullString
-		var txTimeStr sql.NullString
-		err = rows.Scan(&p.Mission, &rewardStr, &txTimeStr)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Publisher, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -120,7 +118,7 @@ func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, 
 }
 
 func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT mission_id, reward, txtime FROM publish WHERE publisher = ? LIMIT ?")
+	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, publisher, txtime FROM publish WHERE publisher = ? LIMIT ?")
 	if err != nil {
 		log.Println(err)
 		return
@@ -135,8 +133,7 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 	for rows.Next() {
 		var p PublishEvent
 		var rewardStr sql.NullString
-		var txTimeStr sql.NullString
-		err = rows.Scan(&p.Mission, &rewardStr, &txTimeStr)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Publisher, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -152,7 +149,7 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 		err = errors.New("no mission id")
 		return
 	}
-	query := "SELECT mission_id, solution_id, context, solver FROM solve WHERE mission_id in ('"
+	query := "SELECT block, tx, mission_id, solution_id, context, solver, txtime FROM solve WHERE mission_id in ('"
 	query += strings.Join(missions, "','")
 	query += "');"
 
@@ -163,7 +160,7 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 	}
 	for rows.Next() {
 		var s Solution
-		err1 := rows.Scan(&s.Mission, &s.Solution, &s.Data, &s.Solver)
+		err1 := rows.Scan(&s.Block, &s.Tx, &s.Mission, &s.Solution, &s.Data, &s.Solver, &s.TxTime)
 		if err1 != nil {
 			log.Println(err1)
 			continue
@@ -185,7 +182,7 @@ func getProcessed(db *sql.DB, solutions []string, status string) (process []Proc
 		err = errors.New("status SHOULD be 'accept' or 'reject'")
 		return
 	}
-	query := "SELECT solution_id, txtime FROM "
+	query := "SELECT block, tx, solution_id, txtime FROM "
 	query += status
 	query += " WHERE solution_id in ('"
 	query += strings.Join(solutions, "','")
@@ -198,7 +195,7 @@ func getProcessed(db *sql.DB, solutions []string, status string) (process []Proc
 	}
 	for rows.Next() {
 		var p Process
-		err1 := rows.Scan(&p.Solution, &p.Time)
+		err1 := rows.Scan(&p.Block, &p.Tx, &p.Solution, &p.TxTime)
 		if err1 != nil {
 			log.Println(err1)
 			continue

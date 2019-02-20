@@ -10,6 +10,7 @@ type PublishEvent struct {
 	Mission   string
 	Reward    *big.Int
 	Publisher string
+	TxTime    string
 }
 
 type SolveEvent struct {
@@ -19,13 +20,14 @@ type SolveEvent struct {
 	Mission  string
 	Data     string
 	Solver   string
+	TxTime   string
 }
 
 type ProcessEvent struct {
 	Block    uint64
 	Tx       string
 	Solution string
-	Time     string // type is string, just for output
+	TxTime   string // type is string, just for output
 	Status   string // accept or reject
 }
 type Process ProcessEvent
@@ -37,6 +39,7 @@ type ConfirmEvent struct {
 	Tx          string
 	Solution    string
 	Arbitration string
+	TxTime      string
 }
 
 type ProcessStatus struct {
@@ -47,33 +50,11 @@ type ProcessStatus struct {
 
 type Solution struct {
 	SolveEvent
-	Status string // Unprocessed, Accepted, Rejected
-	Process Process       // AcceptEvent or RejectEvent
+	Status  string  // Unprocessed, Accepted, Rejected
+	Process Process // AcceptEvent or RejectEvent
 }
 
 type Mission struct {
 	PublishEvent
 	Solutions []Solution
 }
-
-/*func (m Mission) JsonString(prefix string) (json string) {
-	json += fmt.Sprintln("{")
-	json += m.PublishEvent.JsonString(prefix + "\t")
-	for _, s := range m.Solutions {
-		json += s.JsonString(prefix + "\t")
-	}
-	json += fmt.Sprintln("}")
-	return json
-}
-
-
-func (p PublishEvent) JsonString(prefix string) (json string) {
-	json += fmt.Sprintln("{")
-
-	json += prefix + string(p.Block)
-	json += prefix + p.Tx
-	json += prefix + p.Mission
-
-	json += fmt.Sprintln("}")
-	return json
-}*/

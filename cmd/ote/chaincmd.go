@@ -13,6 +13,7 @@ import (
 	"gopkg.in/urfave/cli.v2"
 	"log"
 	"math/big"
+	"time"
 )
 
 var (
@@ -76,7 +77,6 @@ func download(ctx *cli.Context) (err error) {
 	}
 
 	logs, err := client.FilterLogs(context.Background(), query)
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -86,9 +86,18 @@ func download(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
+	shanghai, _ := time.LoadLocation("Asia/Shanghai")
+
 	for i, vLog := range logs {
 		fmt.Printf("TxHash[%d]: %s\n", i, vLog.TxHash.Hex())
-		err := process.ParseOTLog(vLog, db)
+		header, err := client.HeaderByHash(context.Background(), vLog.BlockHash)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		txTime := header.Time
+		timeStr := time.Unix(txTime.Int64(), 0).In(shanghai).String()
+		err = process.ParseOTLog(vLog, timeStr, db)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -129,12 +138,21 @@ func listen(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
+	shanghai, _ := time.LoadLocation("Asia/Shanghai")
+
 	for {
 		select {
 		case err := <-sub.Err():
 			fmt.Println(err)
 		case vLog := <-logs:
-			err := process.ParseOTLog(vLog, db)
+			header, err := client.HeaderByHash(context.Background(), vLog.BlockHash)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			txTime := header.Time
+			timeStr := time.Unix(txTime.Int64(), 0).In(shanghai).String()
+			err = process.ParseOTLog(vLog, timeStr, db)
 			if err != nil {
 				fmt.Println(err)
 				continue

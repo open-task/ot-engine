@@ -14,11 +14,11 @@ import (
 	"strings"
 )
 
-func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
+func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
 	switch vLog.Topics[0].String() {
 	case PublishSigHash.Hex():
 		fmt.Println("Publish")
-		row, err1 := Publish(vLog)
+		row, err1 := Publish(vLog, txTime)
 		if err1 != nil {
 			return err1
 		}
@@ -29,7 +29,7 @@ func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
 		}
 	case SolveSigHash.Hex():
 		fmt.Println("Solve")
-		row, err1 := Solve(vLog)
+		row, err1 := Solve(vLog, txTime)
 		if err1 != nil {
 			return err1
 		}
@@ -40,7 +40,7 @@ func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
 		}
 	case AcceptSigHash.Hex():
 		fmt.Println("Accept")
-		row, err1 := Accept(vLog)
+		row, err1 := Accept(vLog, txTime)
 		if err1 != nil {
 			return err1
 		}
@@ -51,7 +51,7 @@ func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
 		}
 	case RejectSigHash.Hex():
 		fmt.Println("Reject")
-		row, err1 := Reject(vLog)
+		row, err1 := Reject(vLog, txTime)
 		if err1 != nil {
 			return err1
 		}
@@ -62,7 +62,7 @@ func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
 		}
 	case ConfirmSigHash.Hex():
 		fmt.Println("Confirm")
-		row, err1 := Confirm(vLog)
+		row, err1 := Confirm(vLog, txTime)
 		if err1 != nil {
 			return err1
 		}
@@ -77,10 +77,10 @@ func ParseOTLog(vLog types.Log, db *sql.DB) (err error) {
 	return
 }
 
-func Publish(vLog types.Log) (p otTypes.PublishEvent, err error) {
+func Publish(vLog types.Log, txTime string) (p otTypes.PublishEvent, err error) {
 	event := struct {
-		MissionId string
-		RewardInWei    *big.Int
+		MissionId   string
+		RewardInWei *big.Int
 	}{}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(contracts.OpenTaskABI)))
@@ -100,11 +100,12 @@ func Publish(vLog types.Log) (p otTypes.PublishEvent, err error) {
 	p.Reward = event.RewardInWei
 	p.Block = vLog.BlockNumber
 	p.Tx = vLog.TxHash.String()
-	p.Publisher = vLog.Address.Hex()
+	p.TxTime = txTime
+	p.Publisher = vLog.Address.Hex() //wrong
 	return
 }
 
-func Solve(vLog types.Log) (s otTypes.SolveEvent, err error) {
+func Solve(vLog types.Log, txTime string) (s otTypes.SolveEvent, err error) {
 	event := struct {
 		SolutionId string
 		MissionId  string
@@ -123,15 +124,18 @@ func Solve(vLog types.Log) (s otTypes.SolveEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s, missionId: %s, data: %s\n", event.SolutionId, event.MissionId, event.Data)
+
 	s.Solution = event.SolutionId
 	s.Mission = event.MissionId
 	s.Data = event.Data
 	s.Block = vLog.BlockNumber
 	s.Tx = vLog.TxHash.String()
+	s.TxTime = txTime
+	s.Solver = vLog.Address.Hex() // wrong
 	return
 }
 
-func Accept(vLog types.Log) (a otTypes.AcceptEvent, err error) {
+func Accept(vLog types.Log, txTime string) (a otTypes.AcceptEvent, err error) {
 	event := struct {
 		SolutionId string
 	}{}
@@ -148,13 +152,15 @@ func Accept(vLog types.Log) (a otTypes.AcceptEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s\n", event.SolutionId)
+
 	a.Solution = event.SolutionId
 	a.Block = vLog.BlockNumber
 	a.Tx = vLog.TxHash.String()
+	a.TxTime = txTime
 	return
 }
 
-func Reject(vLog types.Log) (r otTypes.RejectEvent, err error) {
+func Reject(vLog types.Log, txTime string) (r otTypes.RejectEvent, err error) {
 	event := struct {
 		SolutionId string
 	}{}
@@ -171,13 +177,15 @@ func Reject(vLog types.Log) (r otTypes.RejectEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s\n", event.SolutionId)
+
 	r.Solution = event.SolutionId
 	r.Block = vLog.BlockNumber
 	r.Tx = vLog.TxHash.String()
+	r.TxTime = txTime
 	return
 }
 
-func Confirm(vLog types.Log) (c otTypes.ConfirmEvent, err error) {
+func Confirm(vLog types.Log, txTime string) (c otTypes.ConfirmEvent, err error) {
 	fmt.Println("Confirm")
 	event := struct {
 		SolutionId    string
@@ -196,9 +204,11 @@ func Confirm(vLog types.Log) (c otTypes.ConfirmEvent, err error) {
 	}
 
 	fmt.Printf("solutionId: %s, missionId: %s\n", event.SolutionId, event.ArbitrationId)
+
 	c.Solution = event.SolutionId
 	c.Arbitration = event.ArbitrationId
 	c.Block = vLog.BlockNumber
 	c.Tx = vLog.TxHash.String()
+	c.TxTime = txTime
 	return
 }

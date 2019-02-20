@@ -32,6 +32,7 @@ GRANT ALL ON ot_local.* TO 'engine'@'localhost';
 ```
 
 #### (可选）创建测试表
+
 （可选）此表没别的用途，仅用于[测试数据库连接](#测试数据库连接)。
 ```sql
 CREATE TABLE squareNum (number int PRIMARY KEY, squareNumber int);
@@ -40,36 +41,42 @@ CREATE TABLE squareNum (number int PRIMARY KEY, squareNumber int);
 ### (可选）测试数据库连接
 
 数据库新建好以后，可以用以下测试工具测试。
+
 ```
 $ cd demo/test_db
 $ go run main.go
 The square number of 13 is: 169
 The square number of 1 is: 1
 ```
+
 如重复测试，需要清空表格。
 
 ## 部署
 
 ```bash
-$ cd cmd/ote
-$ go install .
+$ go install -v ./...
 ```
 
-会在`$GOPATH/bin`下生成ote文件。
+会在`$GOPATH/bin`下生成`ote`的可执行文件。
 
 可使用`ote --help`查看帮助，`ote --version`查看版本。
 
 ### 启动服务
 
 #### 1. 监听链上事件
+
 ```bash
 $ ote -c config.json listen
 ```
+
 #### 2. 提供API
+
 ```bash
 $ ote -c config.json serve
 ```
+
 #### 3. 下载指定区块的日志
+
 ```bash
 $ ote -c config.json download
 ```

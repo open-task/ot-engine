@@ -1,9 +1,9 @@
 package config
 
 import (
-	"os"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"os"
 )
 
 type Config struct {
@@ -39,6 +39,6 @@ func (c Config) DSN() (dsn string) {
 		dsn += ")"
 	}
 
-	dsn += "/" + c.Database.Database
+	dsn += "/" + c.Database.Database + "?timeout=90s&collation=utf8mb4_unicode_ci&parseTime=true"
 	return dsn
 }
