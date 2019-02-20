@@ -97,7 +97,16 @@ func download(ctx *cli.Context) (err error) {
 		}
 		txTime := header.Time
 		timeStr := time.Unix(txTime.Int64(), 0).In(shanghai).String()
-		err = process.ParseOTLog(vLog, timeStr, db)
+
+		tx, _, err := client.TransactionByHash(context.Background(), vLog.TxHash)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		signer := types.NewEIP155Signer(tx.ChainId())
+		sender, err := signer.Sender(tx)
+
+		err = process.ParseOTLog(vLog, timeStr, sender.String(), db)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -152,7 +161,21 @@ func listen(ctx *cli.Context) (err error) {
 			}
 			txTime := header.Time
 			timeStr := time.Unix(txTime.Int64(), 0).In(shanghai).String()
-			err = process.ParseOTLog(vLog, timeStr, db)
+
+			tx, _, err := client.TransactionByHash(context.Background(), vLog.TxHash)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			signer := types.NewEIP155Signer(tx.ChainId())
+			sender, err := signer.Sender(tx)
+
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			err = process.ParseOTLog(vLog, timeStr, sender.String(), db)
 			if err != nil {
 				fmt.Println(err)
 				continue

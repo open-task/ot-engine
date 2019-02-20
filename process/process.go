@@ -14,11 +14,11 @@ import (
 	"strings"
 )
 
-func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
+func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err error) {
 	switch vLog.Topics[0].String() {
 	case PublishSigHash.Hex():
 		fmt.Println("Publish")
-		row, err1 := Publish(vLog, txTime)
+		row, err1 := Publish(vLog, txTime, sender)
 		if err1 != nil {
 			return err1
 		}
@@ -29,7 +29,7 @@ func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
 		}
 	case SolveSigHash.Hex():
 		fmt.Println("Solve")
-		row, err1 := Solve(vLog, txTime)
+		row, err1 := Solve(vLog, txTime, sender)
 		if err1 != nil {
 			return err1
 		}
@@ -40,7 +40,7 @@ func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
 		}
 	case AcceptSigHash.Hex():
 		fmt.Println("Accept")
-		row, err1 := Accept(vLog, txTime)
+		row, err1 := Accept(vLog, txTime, sender)
 		if err1 != nil {
 			return err1
 		}
@@ -51,7 +51,7 @@ func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
 		}
 	case RejectSigHash.Hex():
 		fmt.Println("Reject")
-		row, err1 := Reject(vLog, txTime)
+		row, err1 := Reject(vLog, txTime, sender)
 		if err1 != nil {
 			return err1
 		}
@@ -62,7 +62,7 @@ func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
 		}
 	case ConfirmSigHash.Hex():
 		fmt.Println("Confirm")
-		row, err1 := Confirm(vLog, txTime)
+		row, err1 := Confirm(vLog, txTime, sender)
 		if err1 != nil {
 			return err1
 		}
@@ -77,7 +77,7 @@ func ParseOTLog(vLog types.Log, txTime string, db *sql.DB) (err error) {
 	return
 }
 
-func Publish(vLog types.Log, txTime string) (p otTypes.PublishEvent, err error) {
+func Publish(vLog types.Log, txTime string, sender string) (p otTypes.PublishEvent, err error) {
 	event := struct {
 		MissionId   string
 		RewardInWei *big.Int
@@ -101,11 +101,11 @@ func Publish(vLog types.Log, txTime string) (p otTypes.PublishEvent, err error) 
 	p.Block = vLog.BlockNumber
 	p.Tx = vLog.TxHash.String()
 	p.TxTime = txTime
-	p.Publisher = vLog.Address.Hex() //wrong
+	p.Publisher = sender
 	return
 }
 
-func Solve(vLog types.Log, txTime string) (s otTypes.SolveEvent, err error) {
+func Solve(vLog types.Log, txTime string, sender string) (s otTypes.SolveEvent, err error) {
 	event := struct {
 		SolutionId string
 		MissionId  string
@@ -131,11 +131,11 @@ func Solve(vLog types.Log, txTime string) (s otTypes.SolveEvent, err error) {
 	s.Block = vLog.BlockNumber
 	s.Tx = vLog.TxHash.String()
 	s.TxTime = txTime
-	s.Solver = vLog.Address.Hex() // wrong
+	s.Solver = sender
 	return
 }
 
-func Accept(vLog types.Log, txTime string) (a otTypes.AcceptEvent, err error) {
+func Accept(vLog types.Log, txTime string, sender string) (a otTypes.AcceptEvent, err error) {
 	event := struct {
 		SolutionId string
 	}{}
@@ -157,10 +157,11 @@ func Accept(vLog types.Log, txTime string) (a otTypes.AcceptEvent, err error) {
 	a.Block = vLog.BlockNumber
 	a.Tx = vLog.TxHash.String()
 	a.TxTime = txTime
+	_ = sender // NOT record
 	return
 }
 
-func Reject(vLog types.Log, txTime string) (r otTypes.RejectEvent, err error) {
+func Reject(vLog types.Log, txTime string, sender string) (r otTypes.RejectEvent, err error) {
 	event := struct {
 		SolutionId string
 	}{}
@@ -182,10 +183,11 @@ func Reject(vLog types.Log, txTime string) (r otTypes.RejectEvent, err error) {
 	r.Block = vLog.BlockNumber
 	r.Tx = vLog.TxHash.String()
 	r.TxTime = txTime
+	_ = sender
 	return
 }
 
-func Confirm(vLog types.Log, txTime string) (c otTypes.ConfirmEvent, err error) {
+func Confirm(vLog types.Log, txTime string, sender string) (c otTypes.ConfirmEvent, err error) {
 	fmt.Println("Confirm")
 	event := struct {
 		SolutionId    string
