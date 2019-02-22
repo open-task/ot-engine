@@ -3,14 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/xyths/ot-engine/engine"
+	"github.com/open-task/ot-engine/engine"
 	"gopkg.in/urfave/cli.v2"
 	"log"
 	"math/big"
 	"os"
 
-	"github.com/xyths/ot-engine/cmd/utils"
-	"github.com/xyths/ot-engine/node"
+	"github.com/open-task/ot-engine/cmd/utils"
+	"github.com/open-task/ot-engine/node"
 )
 
 type HTTPConfig struct {

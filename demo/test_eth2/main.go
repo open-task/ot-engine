@@ -1,7 +1,7 @@
 package main
 
 import (
-	openTask "github.com/xyths/ot-engine/contracts"
+	openTask "github.com/open-task/ot-engine/contracts"
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum"

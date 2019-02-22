@@ -5,7 +5,7 @@ import (
 	"os"
 	"fmt"
 	"gopkg.in/urfave/cli.v2"
-	"github.com/xyths/ot-engine/cmd/utils"
+	"github.com/open-task/ot-engine/cmd/utils"
 )
 
 var app *cli.App

@@ -1,9 +1,9 @@
 package collect
 
 import (
-	. "github.com/xyths/ot-engine/types"
+	. "github.com/open-task/ot-engine/types"
 	"database/sql"
-	"github.com/xyths/ot-engine/database"
+	"github.com/open-task/ot-engine/database"
 	"fmt"
 )
 

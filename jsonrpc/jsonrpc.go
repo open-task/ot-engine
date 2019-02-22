@@ -3,8 +3,8 @@ package jsonrpc
 import (
 	"database/sql"
 	"fmt"
-	"github.com/xyths/ot-engine/collect"
-	. "github.com/xyths/ot-engine/types"
+	"github.com/open-task/ot-engine/collect"
+	. "github.com/open-task/ot-engine/types"
 )
 
 type EngineRPC struct {

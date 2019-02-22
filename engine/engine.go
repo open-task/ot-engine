@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	"github.com/kanocz/goginjsonrpc"
-	"github.com/xyths/ot-engine/jsonrpc"
+	"github.com/open-task/ot-engine/jsonrpc"
 	"log"
 	"net/http"
 )

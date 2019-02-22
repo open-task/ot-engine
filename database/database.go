@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	. "github.com/xyths/ot-engine/types"
+	. "github.com/open-task/ot-engine/types"
 	"log"
 	"math/big"
 	"strings"

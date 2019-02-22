@@ -7,7 +7,7 @@
 ### 下载源码
 
 ```
-git clone https://github.com/xyths/ot-engine.git
+git clone https://github.com/open-task/ot-engine.git
 ```
 
 ### 安装依赖
