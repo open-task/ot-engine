@@ -34,7 +34,13 @@ func (e *EngineRPC) GetPublished(address string, limit int) (missions []Mission)
 	return missions
 }
 
-func (e *EngineRPC) GetUnsolved(address string, limit int) (missions []Mission) {
-	// Only Unsolved Mission
+func (e *EngineRPC) GetUnsolved(offset int, limit int) (missions []Mission) {
+	missions1, err := collect.GetUnsolved(e.DB, offset, limit)
+	if err != nil {
+		fmt.Printf("Error When GetMission: %s", err.Error())
+	} else {
+		missions = missions1
+		fmt.Println(missions1)
+	}
 	return missions
 }
