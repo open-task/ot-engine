@@ -53,6 +53,7 @@ The square number of 1 is: 1
 
 ## 部署
 
+### 安装执行文件
 ```bash
 $ go install -v ./...
 ```
@@ -60,6 +61,18 @@ $ go install -v ./...
 会在`$GOPATH/bin`下生成`ote`的可执行文件。
 
 可使用`ote --help`查看帮助，`ote --version`查看版本。
+
+### 配置参考
+
+- 智能合约地址
+  - `Rinkeby`
+    - `DET`: `0x04B703784D3d82B5d5E4C103d0bDb80169653f48`
+    - `OpenTask`: `0xF562a7c51a158ae6E6170Ef7905af5d1cE43d24A`
+    - `Node`: `wss://rinkeby.infura.io/ws/v3/e17969db9bc94e75a474b3d3c5257a75`
+  - `Kovan`
+    - `DET`: `0x6ffF60A882CE1Cd793dC14261Eec0f0d6A470E21`
+    - `OpenTask`: `0x7b37CDa8c4633634E6dED334Bc033Bd9b2783184`
+    - `Node`: `wss://kovan.infura.io/ws/v3/e17969db9bc94e75a474b3d3c5257a75`
 
 ### 启动服务
 

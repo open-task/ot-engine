@@ -1,0 +1,16 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": "3306",
+    "user": "engine",
+    "password": "decopentask",
+    "database": "kovan"
+  },
+  "http": {
+    "port": "8080"
+  },
+  "node": {
+    "server": "wss://kovan.infura.io/ws/v3/e17969db9bc94e75a474b3d3c5257a75",
+    "contract": "0x7b37CDa8c4633634E6dED334Bc033Bd9b2783184"
+  }
+}
