@@ -1,0 +1,3 @@
+[submodule "docs/contracts"]
+	path = docs/contracts
+	url = https://github.com/open-task/contracts.git
