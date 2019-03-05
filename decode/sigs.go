@@ -3,7 +3,7 @@ package decode
 import "github.com/ethereum/go-ethereum/crypto"
 
 var (
-	publishSig = []byte("Publish(string,uint256)")
+	publishSig = []byte("Publish(string,uint256,string)")
 	solveSig   = []byte("Solve(string,string,string)")
 	acceptSig  = []byte("Accept(string)")
 	rejectSig  = []byte("Reject(string)")

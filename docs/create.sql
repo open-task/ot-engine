@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS publish (
   block INT,
   mission_id VARCHAR(20),
   reward DECIMAL(27,0),
+  context VARCHAR(200) COMMENT 'data',
   publisher VARCHAR(43),
   txtime VARCHAR(40),
   updatetime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS mission (
   block INT,
   mission_id VARCHAR(20),
   reward DECIMAL(27,0),
+  context VARCHAR(200) COMMENT 'data',
   publisher VARCHAR(43),
   solution_num INT DEFAULT 0,
   solved BOOLEAN DEFAULT FALSE,
