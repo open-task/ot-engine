@@ -12,14 +12,14 @@ import (
 
 func Publish(db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
-	stmtIns, err := db.Prepare("INSERT INTO mission (mission_id, reward, publisher, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare("INSERT INTO mission (mission_id, reward, context, publisher, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(e.Mission, e.Reward.String(), e.Publisher, e.Block, e.Tx, e.TxTime)
+	_, err = stmtIns.Exec(e.Mission, e.Reward.String(), e.Data, e.Publisher, e.Block, e.Tx, e.TxTime)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
 }
 
 func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, publisher, txtime FROM mission LIMIT ?, ?")
+	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission LIMIT ?, ?")
 	if err != nil {
 		log.Println(err)
 		return
@@ -123,7 +123,7 @@ func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, 
 	for rows.Next() {
 		var p PublishEvent
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Publisher, &p.TxTime)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue

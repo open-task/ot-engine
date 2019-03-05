@@ -81,6 +81,7 @@ func Publish(vLog types.Log, txTime string, sender string) (p otTypes.PublishEve
 	event := struct {
 		MissionId   string
 		RewardInWei *big.Int
+		Data        string
 	}{}
 
 	contractAbi, err := abi.JSON(strings.NewReader(string(contracts.OpenTaskABI)))
@@ -98,6 +99,7 @@ func Publish(vLog types.Log, txTime string, sender string) (p otTypes.PublishEve
 
 	p.Mission = event.MissionId
 	p.Reward = event.RewardInWei
+	p.Data = event.Data
 	p.Block = vLog.BlockNumber
 	p.Tx = vLog.TxHash.String()
 	p.TxTime = txTime
