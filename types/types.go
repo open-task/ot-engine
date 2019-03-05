@@ -9,6 +9,7 @@ type PublishEvent struct {
 	Tx        string
 	Mission   string
 	Reward    *big.Int
+	Data      string
 	Publisher string
 	TxTime    string
 }
