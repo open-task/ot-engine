@@ -2,16 +2,31 @@
 
 ## Return Structure 返回值结构
 
-### Mission
+### Mission 任务
 
 Mission是任务结构，也是本API的顶层结构，对应着一个任务，含有以下字段：
 
-- `Mission`：`MissionId`，任务ID
-- `Block`：区块高度
-- `Tx`：交易`Hash`
-- `data`
+- `mission`：即`MissionId`，任务ID
+- `block`：区块高度
+- `tx`：交易`Hash`
+- `data`：任务描述
+- `publisher`：发布者的地址
+- `time`：发布的时间（链上时间，下同）
+- `solutions`：与该任务关联的解决方案集合
+
+### Solution 解决方案
+
+Solution是解决方案的数据结构，对应着某次任务的一次解决方案（答案）提交尝试，含有以下字段：
+
+- `solution`：即`SolutionId`，解决方案ID
+- `block`：区块高度
+- `tx`：交易`Hash`
+- `data`：方案描述
+- `solver`：方案提交者的地址
+- `time`：发布的时间
 
 ## GetAllPublished
+
 列出发布的所有任务。
 
 ### Parameters
@@ -311,6 +326,7 @@ curl -s -X POST --data '{"jsonrpc":"2.0","method":"GetPublished","params":["0xF5
 
 ### Returns
 
+- `Mission`
 
 ### Example
 
@@ -327,14 +343,14 @@ curl -s -X POST --data '{"jsonrpc":"2.0","method":"GetMissionInfo","params":["m1
   "id": "11",
   "jsonrpc": "2.0",
   "result": {
-    "Block": 10483278,
-    "Tx": "0x3ad58a0b36360f4b0116dc3cae894161dc70e51e4601cfa0a69fe633ae7f44d8",
-    "Mission": "m1",
-    "Reward": 100,
-    "Data": "This is mission 1 published by alex.",
-    "Publisher": "0x2707732B64b6b10bC1658AE5eD39788C9D2479C5",
-    "TxTime": "2019-03-05 10:27:52 +0800 CST",
-    "Solutions": null
+    "block": 10483278,
+    "tx": "0x3ad58a0b36360f4b0116dc3cae894161dc70e51e4601cfa0a69fe633ae7f44d8",
+    "mission": "m1",
+    "reward": 100,
+    "data": "This is mission 1 published by alex.",
+    "publisher": "0x2707732B64b6b10bC1658AE5eD39788C9D2479C5",
+    "time": "2019-03-05 10:27:52 +0800 CST",
+    "solutions": null
   }
 }
 ```
