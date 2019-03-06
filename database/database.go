@@ -162,7 +162,7 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 }
 
 func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, publisher, txtime FROM mission WHERE solved = FALSE LIMIT ?, ?")
+	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission WHERE solved = FALSE LIMIT ?, ?")
 	if err != nil {
 		log.Println(err)
 		return
@@ -177,7 +177,7 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 	for rows.Next() {
 		var p PublishEvent
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Publisher, &p.TxTime)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -186,6 +186,32 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 		events = append(events, p)
 	}
 	return events, err
+}
+
+func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
+	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission WHERE mission_id = ? LIMIT 1")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query(id)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	for rows.Next() {
+		var rewardStr sql.NullString
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.TxTime)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
+		break
+	}
+	return
 }
 
 func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []string, err error) {

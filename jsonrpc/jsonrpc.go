@@ -44,3 +44,12 @@ func (e *EngineRPC) GetUnsolved(offset int, limit int) (missions []Mission) {
 	}
 	return missions
 }
+
+func (e *EngineRPC) GetMissionInfo(id string) (mission Mission) {
+	mission, err := collect.GetOneMission(e.DB, id)
+	if err != nil {
+		fmt.Printf("Error When GetMission: %s", err.Error())
+		return Mission{}
+	}
+	return mission
+}

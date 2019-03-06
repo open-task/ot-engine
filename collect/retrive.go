@@ -75,6 +75,29 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err err
 	return missions, err
 }
 
+func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
+	publish, err := database.GetOneMission(db, id)
+	if err != nil {
+		fmt.Printf("Error when GetOneMission: %s", err)
+		return m, err
+	}
+	var missions []Mission
+	var missionIdList []string
+
+		m.PublishEvent = publish
+		missionIdList = append(missionIdList, publish.Mission)
+		missions = append(missions, m)
+
+	solutions, err := GetSolutions(db, missionIdList)
+	if err != nil {
+		fmt.Printf("Error when GetSolutions: %s", err)
+		// half result, no solutions
+		return m, nil
+	}
+	fillMissions(&missions, &solutions)
+	return
+}
+
 func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, err error) {
 	solutions, ids, err := database.GetSolutions(db, missions)
 	processList, err := GetProcess(db, ids)
