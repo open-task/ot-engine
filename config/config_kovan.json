@@ -12,6 +12,6 @@
   "node": {
     "server": "wss://kovan.infura.io/ws/v3/e17969db9bc94e75a474b3d3c5257a75",
     "contract": "0x51fC15CA47034bDF62F6e0fd0E37AB389832994C",
-    "from": 10483032
+    "from": 10491971
   }
 }
