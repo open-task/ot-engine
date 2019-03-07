@@ -152,7 +152,8 @@ func listen(ctx *cli.Context) (err error) {
 	for {
 		select {
 		case err := <-sub.Err():
-			fmt.Println(err)
+			fmt.Errorf("Got Err when listen: %s", err)
+			break // this will exit the program, and auto restart by supervisor in PRODUCTION
 		case vLog := <-logs:
 			header, err := client.HeaderByHash(context.Background(), vLog.BlockHash)
 			if err != nil {
