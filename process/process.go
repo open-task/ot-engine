@@ -22,7 +22,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 		if err1 != nil {
 			return err1
 		}
-		fmt.Println(row)
+		//fmt.Println(row)
 		err1 = database.Publish(db, row)
 		if err1 != nil {
 			return err1
@@ -33,7 +33,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 		if err1 != nil {
 			return err1
 		}
-		fmt.Println(row)
+		//fmt.Println(row)
 		err1 = database.Solve(db, row)
 		if err1 != nil {
 			return err1
@@ -44,7 +44,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 		if err1 != nil {
 			return err1
 		}
-		fmt.Println(row)
+		//fmt.Println(row)
 		err1 = database.Accept(db, row)
 		if err1 != nil {
 			return err1
@@ -55,7 +55,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 		if err1 != nil {
 			return err1
 		}
-		fmt.Println(row)
+		//fmt.Println(row)
 		err1 = database.Reject(db, row)
 		if err1 != nil {
 			return err1
@@ -66,13 +66,13 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 		if err1 != nil {
 			return err1
 		}
-		fmt.Println(row)
+		//fmt.Println(row)
 		err1 = database.Confirm(db, row)
 		if err1 != nil {
 			return err1
 		}
 	default:
-		fmt.Println("UNKNOWN Event Log")
+		fmt.Println("UNKNOWN Event")
 	}
 	return
 }

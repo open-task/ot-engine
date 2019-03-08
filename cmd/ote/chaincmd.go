@@ -123,6 +123,7 @@ func serve(ctx *cli.Context) error {
 }
 
 func listen(ctx *cli.Context) (err error) {
+	fmt.Println("Listen process started")
 	cfg := LoadConfig(ctx)
 	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
 
@@ -183,5 +184,6 @@ func listen(ctx *cli.Context) (err error) {
 			}
 		}
 	}
+	fmt.Println("Listen process finished")
 	return
 }
