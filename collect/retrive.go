@@ -95,6 +95,7 @@ func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
 		return m, nil
 	}
 	fillMissions(&missions, &solutions)
+	m = missions[0]
 	return
 }
 
