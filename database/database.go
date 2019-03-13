@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+var Decimals = big.NewFloat(1e+18)
+
 func Publish(db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
 	stmtIns, err := db.Prepare("INSERT INTO mission (mission_id, reward, context, publisher, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?, ?)")
@@ -128,7 +130,16 @@ func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, 
 			log.Println(err)
 			continue
 		}
-		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
+		var success bool
+		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
+		if !success {
+			p.Reward = big.NewInt(0)
+		}
+		p.RewardInDET, success = big.NewFloat(0).SetString(rewardStr.String)
+		if !success {
+			p.RewardInDET = big.NewFloat(0)
+		}
+		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		events = append(events, p)
 	}
 	return events, err
@@ -155,7 +166,16 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 			log.Println(err)
 			continue
 		}
-		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
+		var success bool
+		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
+		if !success {
+			p.Reward = big.NewInt(0)
+		}
+		p.RewardInDET, success = big.NewFloat(0).SetString(rewardStr.String)
+		if !success {
+			p.RewardInDET = big.NewFloat(0)
+		}
+		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		events = append(events, p)
 	}
 	return events, err
@@ -182,7 +202,16 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 			log.Println(err)
 			continue
 		}
-		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
+		var success bool
+		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
+		if !success {
+			p.Reward = big.NewInt(0)
+		}
+		p.RewardInDET, success = big.NewFloat(0).SetString(rewardStr.String)
+		if !success {
+			p.RewardInDET = big.NewFloat(0)
+		}
+		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		events = append(events, p)
 	}
 	return events, err
@@ -208,7 +237,16 @@ func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
 			log.Println(err)
 			continue
 		}
-		p.Reward, _ = new(big.Int).SetString(rewardStr.String, 10)
+		var success bool
+		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
+		if !success {
+			p.Reward = big.NewInt(0)
+		}
+		p.RewardInDET, success = big.NewFloat(0).SetString(rewardStr.String)
+		if !success {
+			p.RewardInDET = big.NewFloat(0)
+		}
+		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		break
 	}
 	return

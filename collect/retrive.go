@@ -1,10 +1,10 @@
 package collect
 
 import (
-	. "github.com/open-task/ot-engine/types"
 	"database/sql"
-	"github.com/open-task/ot-engine/database"
 	"fmt"
+	"github.com/open-task/ot-engine/database"
+	. "github.com/open-task/ot-engine/types"
 )
 
 func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
@@ -84,9 +84,9 @@ func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
 	var missions []Mission
 	var missionIdList []string
 
-		m.PublishEvent = publish
-		missionIdList = append(missionIdList, publish.Mission)
-		missions = append(missions, m)
+	m.PublishEvent = publish
+	missionIdList = append(missionIdList, publish.Mission)
+	missions = append(missions, m)
 
 	solutions, err := GetSolutions(db, missionIdList)
 	if err != nil {

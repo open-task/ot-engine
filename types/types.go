@@ -5,20 +5,22 @@ import (
 )
 
 type PublishEvent struct {
-	Block     uint64   `json:"block"`
-	Tx        string   `json:"tx"`
-	Mission   string   `json:"mission"`
-	Reward    *big.Int `json:"reward"`
-	Data      string   `json:"data"`
-	Publisher string   `json:"publisher"`
-	TxTime    string   `json:"time"`
+	Block       uint64     `json:"block"`
+	Tx          string     `json:"tx"`
+	Mission     string     `json:"mission_id"`
+	Reward      *big.Int   `json:"reward_wei"`
+	RewardInDET *big.Float `json:"reward_det"`
+	Data        string     `json:"data"`
+	Publisher   string     `json:"publisher"`
+	Status      string     `json:"status"` // Published, Unsolve, Solved
+	TxTime      string     `json:"time"`
 }
 
 type SolveEvent struct {
 	Block    uint64 `json:"block"`
 	Tx       string `json:"tx"`
-	Solution string `json:"solution"`
-	Mission  string `json:"mission"`
+	Solution string `json:"solution_id"`
+	Mission  string `json:"mission_id"`
 	Data     string `json:"data"`
 	Solver   string `json:"solver"`
 	TxTime   string `json:"time"`
@@ -27,9 +29,9 @@ type SolveEvent struct {
 type ProcessEvent struct {
 	Block    uint64 `json:"block"`
 	Tx       string `json:"tx"`
-	Solution string `json:"solution"`
-	TxTime   string `json:"time"` // type is string, just for output
-	Status   string `json:"status"`  // accept or reject
+	Solution string `json:"solution_id"`
+	Status   string `json:"status"` // accept or reject
+	TxTime   string `json:"time"`   // type is string, just for output
 }
 type Process ProcessEvent
 type AcceptEvent ProcessEvent
@@ -38,8 +40,8 @@ type RejectEvent ProcessEvent
 type ConfirmEvent struct {
 	Block       uint64 `json:"block"`
 	Tx          string `json:"tx"`
-	Solution    string `json:"solution"`
-	Arbitration string `json:"arbitration"`
+	Solution    string `json:"solution_id"`
+	Arbitration string `json:"arbitration_id"`
 	TxTime      string `json:"time"`
 }
 
