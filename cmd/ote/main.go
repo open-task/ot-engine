@@ -1,27 +1,28 @@
 package main
 
 import (
-	"path/filepath"
-	"os"
 	"fmt"
-	"gopkg.in/urfave/cli.v2"
 	"github.com/open-task/ot-engine/cmd/utils"
+	"gopkg.in/urfave/cli.v2"
+	"os"
+	"path/filepath"
 )
 
 var app *cli.App
 
 func init() {
 	app = &cli.App{
-		Name:      filepath.Base(os.Args[0]),
-		Usage:     "The ote(OpenTask Engine) command line interface",
-		Version:   "0.2.7",
-		Action:    ote,
+		Name:    filepath.Base(os.Args[0]),
+		Usage:   "The ote(OpenTask Engine) command line interface",
+		Version: "0.2.8",
+		Action:  ote,
 	}
 	Info(app)
 	app.Commands = []*cli.Command{
 		serveCommand,
-		deCommand,
+		downloadCommand,
 		listenCommand,
+		timerCommand,
 	}
 	app.Flags = []cli.Flag{
 		utils.ConfigFlag,

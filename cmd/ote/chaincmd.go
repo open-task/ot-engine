@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	deCommand = &cli.Command{
+	downloadCommand = &cli.Command{
 		Action:  download,
 		Name:    "download",
 		Aliases: []string{"d"},
@@ -40,6 +40,14 @@ var (
 		Name:    "listen",
 		Aliases: []string{"l"},
 		Usage:   "Listen to blockchain and process the event log",
+		Flags: []cli.Flag{
+		},
+	}
+	timerCommand = &cli.Command{
+		Action:  timer,
+		Name:    "timer",
+		Aliases: []string{"t"},
+		Usage:   "Timely download event log from blockchain",
 		Flags: []cli.Flag{
 		},
 	}
@@ -186,4 +194,29 @@ func listen(ctx *cli.Context) (err error) {
 	}
 	fmt.Println("Listen process finished")
 	return
+}
+
+func timer(ctx *cli.Context) (err error) {
+	cfg := LoadConfig(ctx)
+	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
+
+	db, err := sql.Open("mysql", cfg.DSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	duration, _ := time.ParseDuration("10s")
+	timer := time.NewTimer(duration)
+
+	utils.Download(cfg.Node, db)
+	timer.Reset(duration)
+	for {
+		select {
+		case <-timer.C:
+			utils.Download(cfg.Node, db)
+			timer.Reset(duration)
+		}
+	}
+
+	return err
 }

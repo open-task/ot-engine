@@ -220,14 +220,14 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
 	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission WHERE mission_id = ? LIMIT 1")
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		return
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.Query(id)
 	if err != nil {
-		log.Println(err)
+		//log.Println(err)
 		return
 	}
 	for rows.Next() {
@@ -330,4 +330,52 @@ func GetProcess(db *sql.DB, solutions []string) (process []Process, ids []string
 	process = append(p1, p2...)
 	ids = append(l1, l2...)
 	return
+}
+
+func SetFrom(db *sql.DB, from *big.Int) (err error) {
+	stmtIns, err := db.Prepare("INSERT INTO config (k, v) VALUES('from', ?) ON DUPLICATE KEY UPDATE v = ?")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer stmtIns.Close()
+
+	_, err = stmtIns.Exec(from.String(), from.String())
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return err
+}
+
+func GetFrom(db *sql.DB) (from *big.Int, err error) {
+	stmtIns, err := db.Prepare("SELECT v FROM config WHERE k = 'from' LIMIT 1")
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	defer stmtIns.Close()
+
+	rows, err := stmtIns.Query()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	for rows.Next() {
+		var rewardStr sql.NullString
+		err = rows.Scan(&rewardStr)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		var success bool
+		from, success = big.NewInt(0).SetString(rewardStr.String, 10)
+		if !success {
+			from = big.NewInt(0)
+		}
+		break
+	}
+
+	return from, err
 }
