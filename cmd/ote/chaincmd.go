@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"time"
 )
+const interval = "1m"
 
 var (
 	downloadCommand = &cli.Command{
@@ -205,15 +206,17 @@ func timer(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
-	duration, _ := time.ParseDuration("10s")
+	duration, _ := time.ParseDuration(interval)
 	timer := time.NewTimer(duration)
 
 	utils.Download(cfg.Node, db)
+	fmt.Printf("Sleep %s...\n", interval)
 	timer.Reset(duration)
 	for {
 		select {
 		case <-timer.C:
 			utils.Download(cfg.Node, db)
+			fmt.Printf("Sleep %s...\n", interval)
 			timer.Reset(duration)
 		}
 	}
