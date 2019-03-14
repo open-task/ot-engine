@@ -350,6 +350,7 @@ func SetFrom(db *sql.DB, from *big.Int) (err error) {
 }
 
 func GetFrom(db *sql.DB) (from *big.Int, err error) {
+	from = big.NewInt(0)
 	stmtIns, err := db.Prepare("SELECT v FROM config WHERE k = 'from' LIMIT 1")
 	if err != nil {
 		log.Println(err)
