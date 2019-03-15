@@ -32,6 +32,10 @@ const (
 	Published = "Published"
 	Unsolve   = "Unsolved"
 	Solved    = "Solved"
+
+	Unprocessed = "Unprocessed"
+	Accepted = "Accepted"
+	Rejected = "Rejected"
 )
 
 type SolveEvent struct {
@@ -48,7 +52,7 @@ type ProcessEvent struct {
 	Block    uint64 `json:"block"`
 	Tx       string `json:"tx"`
 	Solution string `json:"solution_id"`
-	Status   string `json:"status"` // accept or reject
+	Action   string `json:"action"` // accept or reject
 	TxTime   string `json:"time"`   // type is string, just for output
 }
 type Process ProcessEvent

@@ -307,6 +307,7 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 			log.Println(err1)
 			continue
 		}
+		s.Status = Unprocessed
 		solutions = append(solutions, s)
 		ids = append(ids, s.Solution)
 	}
@@ -314,25 +315,25 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 	return
 }
 
-func getProcessed(db *sql.DB, solutions []string, status string) (process []Process, ids []string, err error) {
+func getProcessed(db *sql.DB, solutions []string, action string) (process []Process, ids []string, err error) {
 	if len(solutions) <= 0 {
 		err = errors.New("no solution id")
 		return
 	}
-	status = strings.ToLower(status)
-	if status != "reject" && status != "accept" {
+	action = strings.ToLower(action)
+	if action != "reject" && action != "accept" {
 		err = errors.New("status SHOULD be 'accept' or 'reject'")
 		return
 	}
 	query := "SELECT block, tx, solution_id, txtime FROM "
-	query += status
+	query += action
 	query += " WHERE solution_id in ('"
 	query += strings.Join(solutions, "','")
 	query += "');"
 
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Printf("Database Error when retrive %s: %s", status, err.Error())
+		fmt.Printf("Database Error when retrive %s: %s", action, err.Error())
 		return
 	}
 	for rows.Next() {
@@ -342,7 +343,7 @@ func getProcessed(db *sql.DB, solutions []string, status string) (process []Proc
 			log.Println(err1)
 			continue
 		}
-		p.Status = status
+		p.Action = action
 		process = append(process, p)
 		ids = append(ids, p.Solution) // success ids
 	}

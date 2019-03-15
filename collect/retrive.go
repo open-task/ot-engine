@@ -7,6 +7,11 @@ import (
 	. "github.com/open-task/ot-engine/types"
 )
 
+const (
+	Accept = "accept"
+	Reject = "reject"
+)
+
 func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
 	publishList, err := database.GetAllPublished(db, offset, limit)
 	if err != nil {
@@ -125,11 +130,17 @@ func fillMissions(missions *[]Mission, solutions *[]Solution) {
 func fillSolutions(solutions *[]Solution, process *[]Process) {
 	for i := range *process {
 		for j := range *solutions {
-			if (*process)[i].Solution == (*solutions)[j].Solution {
-				(*solutions)[j].Process = (*process)[i]
-				(*solutions)[j].Status = (*process)[i].Status
-				break
+			if (*process)[i].Solution != (*solutions)[j].Solution {
+				continue
 			}
+
+			(*solutions)[j].Process = (*process)[i]
+			if (*process)[i].Action == Accept {
+				(*solutions)[j].Status = Accepted
+			} else if (*process)[i].Action == Reject {
+				(*solutions)[j].Status = Rejected
+			}
+			break
 		}
 	}
 }
