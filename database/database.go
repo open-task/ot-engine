@@ -74,7 +74,7 @@ solution_id, block, tx, txtime
 		return err
 	}
 
-	err = addSolutionNum(db, e.Solution)
+	err = updateSolved(db, e.Solution)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -123,7 +123,7 @@ solution_id, arbitration_id, block, tx, txtime
 
 func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
 	stmt, err := db.Prepare(`SELECT
-block, tx, mission_id, reward, context, publisher, txtime
+block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
 LIMIT ?, ?`)
 	if err != nil {
@@ -139,12 +139,14 @@ LIMIT ?, ?`)
 	}
 	for rows.Next() {
 		var p PublishEvent
+		var solved bool
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.TxTime)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+		p.UpdateStatus(solved)
 		var success bool
 		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
 		if !success {
@@ -161,7 +163,11 @@ LIMIT ?, ?`)
 }
 
 func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, publisher, txtime FROM mission WHERE publisher = ? LIMIT ?")
+	stmt, err := db.Prepare(`SELECT
+block, tx, mission_id, reward, publisher, solution_num, solved, txtime
+FROM mission
+WHERE publisher = ?
+LIMIT ?`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -175,12 +181,14 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 	}
 	for rows.Next() {
 		var p PublishEvent
+		var solved bool
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Publisher, &p.TxTime)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+		p.UpdateStatus(solved)
 		var success bool
 		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
 		if !success {
@@ -197,7 +205,11 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 }
 
 func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission WHERE solved = FALSE LIMIT ?, ?")
+	stmt, err := db.Prepare(`SELECT
+block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
+FROM mission
+WHERE solved = FALSE
+LIMIT ?, ?`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -211,12 +223,14 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 	}
 	for rows.Next() {
 		var p PublishEvent
+		var solved bool
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.TxTime)
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+		p.UpdateStatus(solved)
 		var success bool
 		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
 		if !success {
@@ -233,7 +247,10 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 }
 
 func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission WHERE mission_id = ? LIMIT 1")
+	stmt, err := db.Prepare(`SELECT
+block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
+FROM mission
+WHERE mission_id = ? LIMIT 1`)
 	if err != nil {
 		//log.Println(err)
 		return
@@ -247,11 +264,13 @@ func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
 	}
 	for rows.Next() {
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.TxTime)
+		var solved bool
+		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
+		p.UpdateStatus(solved)
 		var success bool
 		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
 		if !success {

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS mission (
   context VARCHAR(200) COMMENT 'data',
   publisher VARCHAR(43),
   solution_num INT DEFAULT 0,
+  solved TINYINT(1) DEFAULT 0,
   txtime VARCHAR(40),
   updatetime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
