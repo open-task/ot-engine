@@ -23,6 +23,7 @@ func Download(cfg node.Config, db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer client.Close()
 
 	address := common.HexToAddress(cfg.Contract)
 	query := ethereum.FilterQuery{

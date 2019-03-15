@@ -14,7 +14,10 @@ var Decimals = big.NewFloat(1e+18)
 
 func Publish(db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
-	stmtIns, err := db.Prepare("INSERT INTO mission (mission_id, reward, context, publisher, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare(`INSERT INTO mission (
+mission_id, reward, context, publisher, block, tx, txtime
+) VALUES( 
+?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -30,7 +33,10 @@ func Publish(db *sql.DB, e PublishEvent) (err error) {
 
 func Solve(db *sql.DB, e SolveEvent) (err error) {
 	// 如果mission_id/solution_id重复，会导致错误关联（后期通过合约解决）
-	stmtIns, err := db.Prepare("INSERT INTO solve (solution_id, mission_id, context, solver, block, tx, txtime) VALUES(?, ?, ?, ?, ?, ?, ?)")
+	stmtIns, err := db.Prepare(`INSERT INTO solution (
+solution_id, mission_id, context, solver, block, tx, txtime
+) VALUES(
+?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -42,11 +48,20 @@ func Solve(db *sql.DB, e SolveEvent) (err error) {
 		log.Println(err)
 		return err
 	}
+
+	err = addSolutionNum(db, e.Mission)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 	return err
 }
 
 func Accept(db *sql.DB, e AcceptEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO accept (solution_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
+	stmtIns, err := db.Prepare(`INSERT INTO accept (
+solution_id, block, tx, txtime
+) VALUES(
+?, ?, ?, ?)`)
 	if err != nil {
 		//log.Println(err)
 		return err
@@ -59,17 +74,9 @@ func Accept(db *sql.DB, e AcceptEvent) (err error) {
 		return err
 	}
 
-	// 未做成事务，暂时不考虑异常失败
-	stmtIns2, err := db.Prepare("UPDATE mission SET solved = TRUE WHERE mission_id IN ( SELECT mission_id FROM solve WHERE solution_id = ?)")
+	err = addSolutionNum(db, e.Solution)
 	if err != nil {
-		//log.Println(err)
-		return err
-	}
-	defer stmtIns2.Close()
-
-	_, err = stmtIns2.Exec(e.Solution)
-	if err != nil {
-		//log.Println(err)
+		log.Println(err)
 		return err
 	}
 
@@ -89,11 +96,16 @@ func Reject(db *sql.DB, e RejectEvent) (err error) {
 		log.Println(err)
 		return err
 	}
+
+	// TODO: change mission status
 	return err
 }
 
 func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO confirm (solution_id, arbitration_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
+	stmtIns, err := db.Prepare(`INSERT INTO confirm (
+solution_id, arbitration_id, block, tx, txtime
+) VALUES(
+?, ?, ?, ?)`)
 	if err != nil {
 		//log.Println(err)
 		return err
@@ -110,7 +122,10 @@ func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
 }
 
 func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare("SELECT block, tx, mission_id, reward, context, publisher, txtime FROM mission LIMIT ?, ?")
+	stmt, err := db.Prepare(`SELECT
+block, tx, mission_id, reward, context, publisher, txtime
+FROM mission
+LIMIT ?, ?`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -257,13 +272,13 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 		err = errors.New("no mission id")
 		return
 	}
-	query := "SELECT block, tx, mission_id, solution_id, context, solver, txtime FROM solve WHERE mission_id in ('"
+	query := "SELECT block, tx, mission_id, solution_id, context, solver, txtime FROM solution WHERE mission_id in ('"
 	query += strings.Join(missions, "','")
 	query += "');"
 
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Printf("Database Error when retrive solve: %s", err.Error())
+		fmt.Printf("Database Error when retrive solution: %s", err.Error())
 		return
 	}
 	for rows.Next() {
@@ -379,4 +394,44 @@ func GetFrom(db *sql.DB) (from *big.Int, err error) {
 	}
 
 	return from, err
+}
+
+func addSolutionNum(db *sql.DB, missionId string) (err error) {
+	stmtIns, err := db.Prepare(`UPDATE mission
+SET    solution_num = solution_num + 1
+WHERE  mission_id = ?`)
+	if err != nil {
+		//log.Println(err)
+		return err
+	}
+	defer stmtIns.Close()
+
+	_, err = stmtIns.Exec(missionId)
+	if err != nil {
+		//log.Println(err)
+		return err
+	}
+	return
+}
+
+func updateSolved(db *sql.DB, solutionId string) (err error) {
+	// 未做成事务，暂时不考虑异常失败
+	stmtIns2, err := db.Prepare(`UPDATE mission
+SET    solved = true
+WHERE  mission_id IN (SELECT mission_id
+                      FROM   solution
+                      WHERE  solution_id = ?) `)
+	if err != nil {
+		//log.Println(err)
+		return err
+	}
+	defer stmtIns2.Close()
+
+	_, err = stmtIns2.Exec(solutionId)
+	if err != nil {
+		//log.Println(err)
+		return err
+	}
+
+	return
 }

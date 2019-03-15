@@ -1,6 +1,6 @@
-drop table publish;
+drop table mission;
 
-drop table solve;
+drop table solution;
 
 drop table accept;
 
