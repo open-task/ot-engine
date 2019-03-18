@@ -94,6 +94,7 @@ func download(ctx *cli.Context) (err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Database connection opened.")
 
 	shanghai, _ := time.LoadLocation("Asia/Shanghai")
 
@@ -156,6 +157,7 @@ func listen(ctx *cli.Context) (err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Database connection opened.")
 
 	shanghai, _ := time.LoadLocation("Asia/Shanghai")
 
@@ -205,6 +207,7 @@ func timer(ctx *cli.Context) (err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Database connection opened.")
 
 	duration, _ := time.ParseDuration(interval)
 	timer := time.NewTimer(duration)
