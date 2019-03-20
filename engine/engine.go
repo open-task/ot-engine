@@ -33,6 +33,7 @@ func (e *OtEngineServer) Setup() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	db.SetMaxOpenConns(10)
 	e.DB = db
 
 	e.Engine = gin.Default()
