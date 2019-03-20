@@ -125,6 +125,7 @@ func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, 
 	stmt, err := db.Prepare(`SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
+ORDER BY block DESC
 LIMIT ?, ?`)
 	if err != nil {
 		log.Println(err)
@@ -167,6 +168,7 @@ func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent,
 block, tx, mission_id, reward, publisher, solution_num, solved, txtime
 FROM mission
 WHERE publisher = ?
+ORDER BY block DESC
 LIMIT ?`)
 	if err != nil {
 		log.Println(err)
@@ -209,6 +211,7 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err 
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
 WHERE solved = FALSE
+ORDER BY block DESC
 LIMIT ?, ?`)
 	if err != nil {
 		log.Println(err)
@@ -250,7 +253,8 @@ func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
 	stmt, err := db.Prepare(`SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
-WHERE mission_id = ? LIMIT 1`)
+WHERE mission_id = ?
+LIMIT 1`)
 	if err != nil {
 		//log.Println(err)
 		return
@@ -293,7 +297,7 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 	}
 	query := "SELECT block, tx, mission_id, solution_id, context, solver, txtime FROM solution WHERE mission_id in ('"
 	query += strings.Join(missions, "','")
-	query += "');"
+	query += "') ORDER BY block DESC;"
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -329,7 +333,7 @@ func getProcessed(db *sql.DB, solutions []string, action string) (process []Proc
 	query += action
 	query += " WHERE solution_id in ('"
 	query += strings.Join(solutions, "','")
-	query += "');"
+	query += "') ORDER BY block DESC;"
 
 	rows, err := db.Query(query)
 	if err != nil {
