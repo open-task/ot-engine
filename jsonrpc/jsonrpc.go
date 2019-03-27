@@ -1,10 +1,12 @@
 package jsonrpc
 
 import (
+	"context"
 	"database/sql"
 	"github.com/open-task/ot-engine/collect"
 	. "github.com/open-task/ot-engine/types"
 	"log"
+	"time"
 )
 
 type EngineRPC struct {
@@ -18,7 +20,9 @@ func (e *EngineRPC) GetAllPublished(offset int, limit int) (missions []Mission) 
 	if err != nil {
 		log.Printf("Error when ping database: %s", err.Error())
 	}
-	missions1, err := collect.GetAllMissions(e.DB, offset, limit)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	missions1, err := collect.GetAllMissions(ctx, e.DB, offset, limit)
 	if err != nil {
 		log.Printf("Error When GetMission: %s", err.Error())
 	} else {
@@ -30,7 +34,9 @@ func (e *EngineRPC) GetAllPublished(offset int, limit int) (missions []Mission) 
 }
 
 func (e *EngineRPC) GetPublished(address string, limit int) (missions []Mission) {
-	missions1, err := collect.GetMissions(e.DB, address, limit)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	missions1, err := collect.GetMissions(ctx, e.DB, address, limit)
 	if err != nil {
 		log.Printf("Error When GetMission: %s", err.Error())
 	} else {
@@ -41,7 +47,9 @@ func (e *EngineRPC) GetPublished(address string, limit int) (missions []Mission)
 }
 
 func (e *EngineRPC) GetUnsolved(offset int, limit int) (missions []Mission) {
-	missions1, err := collect.GetUnsolved(e.DB, offset, limit)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	missions1, err := collect.GetUnsolved(ctx, e.DB, offset, limit)
 	if err != nil {
 		log.Printf("Error When GetMission: %s", err.Error())
 	} else {
@@ -52,7 +60,9 @@ func (e *EngineRPC) GetUnsolved(offset int, limit int) (missions []Mission) {
 }
 
 func (e *EngineRPC) GetMissionInfo(id string) (mission Mission) {
-	mission, err := collect.GetOneMission(e.DB, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	mission, err := collect.GetOneMission(ctx, e.DB, id)
 	if err != nil {
 		log.Printf("Error When GetMission: %s", err.Error())
 		return Mission{}

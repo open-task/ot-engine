@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -12,9 +13,9 @@ import (
 
 var Decimals = big.NewFloat(1e+18)
 
-func Publish(db *sql.DB, e PublishEvent) (err error) {
+func Publish(ctx context.Context, db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
-	stmtIns, err := db.Prepare(`INSERT INTO mission (
+	stmtIns, err := db.PrepareContext(ctx, `INSERT INTO mission (
 mission_id, reward, context, publisher, block, tx, txtime
 ) VALUES( 
 ?, ?, ?, ?, ?, ?, ?)`)
@@ -31,9 +32,9 @@ mission_id, reward, context, publisher, block, tx, txtime
 	return err
 }
 
-func Solve(db *sql.DB, e SolveEvent) (err error) {
+func Solve(ctx context.Context, db *sql.DB, e SolveEvent) (err error) {
 	// 如果mission_id/solution_id重复，会导致错误关联（后期通过合约解决）
-	stmtIns, err := db.Prepare(`INSERT INTO solution (
+	stmtIns, err := db.PrepareContext(ctx, `INSERT INTO solution (
 solution_id, mission_id, context, solver, block, tx, txtime
 ) VALUES(
 ?, ?, ?, ?, ?, ?, ?)`)
@@ -49,7 +50,7 @@ solution_id, mission_id, context, solver, block, tx, txtime
 		return err
 	}
 
-	err = addSolutionNum(db, e.Mission)
+	err = addSolutionNum(ctx, db, e.Mission)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -57,8 +58,8 @@ solution_id, mission_id, context, solver, block, tx, txtime
 	return err
 }
 
-func Accept(db *sql.DB, e AcceptEvent) (err error) {
-	stmtIns, err := db.Prepare(`INSERT INTO accept (
+func Accept(ctx context.Context, db *sql.DB, e AcceptEvent) (err error) {
+	stmtIns, err := db.PrepareContext(ctx, `INSERT INTO accept (
 solution_id, block, tx, txtime
 ) VALUES(
 ?, ?, ?, ?)`)
@@ -74,7 +75,7 @@ solution_id, block, tx, txtime
 		return err
 	}
 
-	err = updateSolved(db, e.Solution)
+	err = updateSolved(ctx, db, e.Solution)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -83,8 +84,8 @@ solution_id, block, tx, txtime
 	return err
 }
 
-func Reject(db *sql.DB, e RejectEvent) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO reject (solution_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
+func Reject(ctx context.Context, db *sql.DB, e RejectEvent) (err error) {
+	stmtIns, err := db.PrepareContext(ctx, "INSERT INTO reject (solution_id, block, tx, txtime) VALUES(?, ?, ?, ?)")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -101,8 +102,8 @@ func Reject(db *sql.DB, e RejectEvent) (err error) {
 	return err
 }
 
-func Confirm(db *sql.DB, e ConfirmEvent) (err error) {
-	stmtIns, err := db.Prepare(`INSERT INTO confirm (
+func Confirm(ctx context.Context, db *sql.DB, e ConfirmEvent) (err error) {
+	stmtIns, err := db.PrepareContext(ctx, `INSERT INTO confirm (
 solution_id, arbitration_id, block, tx, txtime
 ) VALUES(
 ?, ?, ?, ?)`)
@@ -121,8 +122,8 @@ solution_id, arbitration_id, block, tx, txtime
 	return err
 }
 
-func GetAllPublished(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare(`SELECT
+func GetAllPublished(ctx context.Context, db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
+	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
 ORDER BY block DESC
@@ -163,8 +164,8 @@ LIMIT ?, ?`)
 	return events, err
 }
 
-func GetPublished(db *sql.DB, address string, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare(`SELECT
+func GetPublished(ctx context.Context, db *sql.DB, address string, limit int) (events []PublishEvent, err error) {
+	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, publisher, solution_num, solved, txtime
 FROM mission
 WHERE publisher = ?
@@ -206,8 +207,8 @@ LIMIT ?`)
 	return events, err
 }
 
-func GetUnsolved(db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
-	stmt, err := db.Prepare(`SELECT
+func GetUnsolved(ctx context.Context, db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
+	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
 WHERE solved = FALSE
@@ -249,21 +250,21 @@ LIMIT ?, ?`)
 	return events, err
 }
 
-func GetOneMission(db *sql.DB, id string) (p PublishEvent, err error) {
-	stmt, err := db.Prepare(`SELECT
+func GetOneMission(ctx context.Context, db *sql.DB, id string) (p PublishEvent, err error) {
+	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
 WHERE mission_id = ?
 LIMIT 1`)
 	if err != nil {
-		//log.Println(err)
+		log.Println(err)
 		return
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.Query(id)
 	if err != nil {
-		//log.Println(err)
+		log.Println(err)
 		return
 	}
 	for rows.Next() {
@@ -290,7 +291,7 @@ LIMIT 1`)
 	return
 }
 
-func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []string, err error) {
+func GetSolutions(ctx context.Context, db *sql.DB, missions []string) (solutions []Solution, ids []string, err error) {
 	if len(missions) <= 0 {
 		err = errors.New("no mission id")
 		return
@@ -299,7 +300,7 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 	query += strings.Join(missions, "','")
 	query += "') ORDER BY block DESC;"
 
-	rows, err := db.Query(query)
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		fmt.Printf("Database Error when retrive solution: %s", err.Error())
 		return
@@ -319,7 +320,7 @@ func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, ids []st
 	return
 }
 
-func getProcessed(db *sql.DB, solutions []string, action string) (process []Process, ids []string, err error) {
+func getProcessed(ctx context.Context, db *sql.DB, solutions []string, action string) (process []Process, ids []string, err error) {
 	if len(solutions) <= 0 {
 		err = errors.New("no solution id")
 		return
@@ -335,7 +336,7 @@ func getProcessed(db *sql.DB, solutions []string, action string) (process []Proc
 	query += strings.Join(solutions, "','")
 	query += "') ORDER BY block DESC;"
 
-	rows, err := db.Query(query)
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		fmt.Printf("Database Error when retrive %s: %s", action, err.Error())
 		return
@@ -355,13 +356,13 @@ func getProcessed(db *sql.DB, solutions []string, action string) (process []Proc
 	return
 }
 
-func GetProcess(db *sql.DB, solutions []string) (process []Process, ids []string, err error) {
-	p1, l1, e1 := getProcessed(db, solutions, "accept")
+func GetProcess(ctx context.Context, db *sql.DB, solutions []string) (process []Process, ids []string, err error) {
+	p1, l1, e1 := getProcessed(ctx, db, solutions, "accept")
 	if e1 != nil {
 		fmt.Println(e1)
 		return
 	}
-	p2, l2, e2 := getProcessed(db, solutions, "reject")
+	p2, l2, e2 := getProcessed(ctx, db, solutions, "reject")
 	if e2 != nil {
 		fmt.Println(e2)
 		return
@@ -371,8 +372,8 @@ func GetProcess(db *sql.DB, solutions []string) (process []Process, ids []string
 	return
 }
 
-func SetFrom(db *sql.DB, from *big.Int) (err error) {
-	stmtIns, err := db.Prepare("INSERT INTO config (k, v) VALUES('from', ?) ON DUPLICATE KEY UPDATE v = ?")
+func SetFrom(ctx context.Context, db *sql.DB, from *big.Int) (err error) {
+	stmtIns, err := db.PrepareContext(ctx, "INSERT INTO config (k, v) VALUES('from', ?) ON DUPLICATE KEY UPDATE v = ?")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -388,9 +389,9 @@ func SetFrom(db *sql.DB, from *big.Int) (err error) {
 	return err
 }
 
-func GetFrom(db *sql.DB) (from *big.Int, err error) {
+func GetFrom(ctx context.Context, db *sql.DB) (from *big.Int, err error) {
 	from = big.NewInt(0)
-	stmtIns, err := db.Prepare("SELECT v FROM config WHERE k = 'from' LIMIT 1")
+	stmtIns, err := db.PrepareContext(ctx, "SELECT v FROM config WHERE k = 'from' LIMIT 1")
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -420,8 +421,8 @@ func GetFrom(db *sql.DB) (from *big.Int, err error) {
 	return from, err
 }
 
-func addSolutionNum(db *sql.DB, missionId string) (err error) {
-	stmtIns, err := db.Prepare(`UPDATE mission
+func addSolutionNum(ctx context.Context, db *sql.DB, missionId string) (err error) {
+	stmtIns, err := db.PrepareContext(ctx, `UPDATE mission
 SET    solution_num = solution_num + 1
 WHERE  mission_id = ?`)
 	if err != nil {
@@ -438,9 +439,9 @@ WHERE  mission_id = ?`)
 	return
 }
 
-func updateSolved(db *sql.DB, solutionId string) (err error) {
+func updateSolved(ctx context.Context, db *sql.DB, solutionId string) (err error) {
 	// 未做成事务，暂时不考虑异常失败
-	stmtIns2, err := db.Prepare(`UPDATE mission
+	stmtIns2, err := db.PrepareContext(ctx, `UPDATE mission
 SET    solved = true
 WHERE  mission_id IN (SELECT mission_id
                       FROM   solution

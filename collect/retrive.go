@@ -1,6 +1,7 @@
 package collect
 
 import (
+	"context"
 	"database/sql"
 	"github.com/open-task/ot-engine/database"
 	. "github.com/open-task/ot-engine/types"
@@ -12,8 +13,8 @@ const (
 	Reject = "reject"
 )
 
-func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
-	publishList, err := database.GetAllPublished(db, offset, limit)
+func GetAllMissions(ctx context.Context, db *sql.DB, offset int, limit int) (missions []Mission, err error) {
+	publishList, err := database.GetAllPublished(ctx, db, offset, limit)
 	if err != nil {
 		log.Printf("Error when GetMission: %s", err)
 		return missions, err
@@ -25,7 +26,7 @@ func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err 
 		missionIdList = append(missionIdList, p.Mission)
 		missions = append(missions, m)
 	}
-	solutions, err := GetSolutions(db, missionIdList)
+	solutions, err := GetSolutions(ctx, db, missionIdList)
 	if err != nil {
 		log.Printf("Error when GetSolutions: %s", err)
 		return missions, err
@@ -35,8 +36,8 @@ func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err 
 	return missions, err
 }
 
-func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err error) {
-	publishList, err := database.GetPublished(db, address, limit)
+func GetMissions(ctx context.Context, db *sql.DB, address string, limit int) (missions []Mission, err error) {
+	publishList, err := database.GetPublished(ctx, db, address, limit)
 	if err != nil {
 		log.Printf("Error when GetMission: %s", err)
 		return missions, err
@@ -48,7 +49,7 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 		missionIdList = append(missionIdList, p.Mission)
 		missions = append(missions, m)
 	}
-	solutions, err := GetSolutions(db, missionIdList)
+	solutions, err := GetSolutions(ctx, db, missionIdList)
 	if err != nil {
 		log.Printf("Error when GetSolutions: %s", err)
 		return missions, err
@@ -57,8 +58,8 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 
 	return missions, err
 }
-func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
-	publishList, err := database.GetUnsolved(db, offset, limit)
+func GetUnsolved(ctx context.Context, db *sql.DB, offset int, limit int) (missions []Mission, err error) {
+	publishList, err := database.GetUnsolved(ctx, db, offset, limit)
 	if err != nil {
 		log.Printf("Error when GetMission: %s", err)
 		return missions, err
@@ -70,7 +71,7 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err err
 		missionIdList = append(missionIdList, p.Mission)
 		missions = append(missions, m)
 	}
-	solutions, err := GetSolutions(db, missionIdList)
+	solutions, err := GetSolutions(ctx, db, missionIdList)
 	if err != nil {
 		log.Printf("Error when GetSolutions: %s", err)
 		return missions, err
@@ -80,8 +81,8 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err err
 	return missions, err
 }
 
-func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
-	publish, err := database.GetOneMission(db, id)
+func GetOneMission(ctx context.Context, db *sql.DB, id string) (m Mission, err error) {
+	publish, err := database.GetOneMission(ctx, db, id)
 	if err != nil {
 		log.Printf("Error when GetOneMission: %s", err)
 		return m, err
@@ -93,7 +94,7 @@ func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
 	missionIdList = append(missionIdList, publish.Mission)
 	missions = append(missions, m)
 
-	solutions, err := GetSolutions(db, missionIdList)
+	solutions, err := GetSolutions(ctx, db, missionIdList)
 	if err != nil {
 		log.Printf("Error when GetSolutions: %s", err)
 		// half result, no solutions
@@ -104,15 +105,15 @@ func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
 	return
 }
 
-func GetSolutions(db *sql.DB, missions []string) (solutions []Solution, err error) {
-	solutions, ids, err := database.GetSolutions(db, missions)
-	processList, err := GetProcess(db, ids)
+func GetSolutions(ctx context.Context, db *sql.DB, missions []string) (solutions []Solution, err error) {
+	solutions, ids, err := database.GetSolutions(ctx, db, missions)
+	processList, err := GetProcess(ctx, db, ids)
 	fillSolutions(&solutions, &processList)
 	return solutions, err
 }
 
-func GetProcess(db *sql.DB, solutions []string) (process []Process, err error) {
-	process, _, err = database.GetProcess(db, solutions)
+func GetProcess(ctx context.Context, db *sql.DB, solutions []string) (process []Process, err error) {
+	process, _, err = database.GetProcess(ctx, db, solutions)
 	return process, err
 }
 

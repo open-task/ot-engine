@@ -17,7 +17,7 @@ import (
 	"github.com/open-task/ot-engine/node"
 )
 
-func Download(cfg node.Config, db *sql.DB) {
+func Download(ctx context.Context, cfg node.Config, db *sql.DB) {
 	// redail every time
 	client, err := ethclient.Dial(cfg.Server)
 	if err != nil {
@@ -30,7 +30,7 @@ func Download(cfg node.Config, db *sql.DB) {
 		Addresses: []common.Address{address},
 	}
 
-	from := getFrom(db)
+	from := getFrom(ctx, db)
 	//from.Add(from, big.NewInt(1))
 	query.FromBlock = from
 
@@ -63,27 +63,27 @@ func Download(cfg node.Config, db *sql.DB) {
 		signer := types.NewEIP155Signer(tx.ChainId())
 		sender, err := signer.Sender(tx)
 
-		err = process.ParseOTLog(vLog, timeStr, sender.String(), db)
+		err = process.ParseOTLog(ctx, vLog, timeStr, sender.String(), db)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 	}
-	setFrom(db, from)
+	setFrom(ctx, db, from)
 }
 
-func getFrom(db *sql.DB) *big.Int {
-	from, err := database.GetFrom(db)
+func getFrom(ctx context.Context, db *sql.DB) *big.Int {
+	from, err := database.GetFrom(ctx, db)
 	if err != nil {
 		return big.NewInt(0)
 	}
-	fmt.Printf("Load config from: %s\n", from)
+	fmt.Printf("Load config 'from': %s\n", from)
 	return from
 }
 
-func setFrom(db *sql.DB, from *big.Int) bool {
-	fmt.Printf("Update config from: %s\n", from)
-	err := database.SetFrom(db, from)
+func setFrom(ctx context.Context, db *sql.DB, from *big.Int) bool {
+	fmt.Printf("Update config 'from': %s\n", from)
+	err := database.SetFrom(ctx, db, from)
 	if err != nil {
 		return false
 	}

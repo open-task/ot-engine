@@ -1,6 +1,7 @@
 package process
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -12,9 +13,17 @@ import (
 	"log"
 	"math/big"
 	"strings"
+	"time"
 )
 
-func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err error) {
+func ParseOTLog(ctx context.Context, vLog types.Log, txTime string, sender string, pool *sql.DB) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	if err := pool.PingContext(ctx); err != nil {
+		log.Fatalf("unable to connect to database: %v", err)
+	}
+
 	switch vLog.Topics[0].String() {
 	case PublishSigHash.Hex():
 		fmt.Println("Publish")
@@ -23,7 +32,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 			return err1
 		}
 		//fmt.Println(row)
-		err1 = database.Publish(db, row)
+		err1 = database.Publish(ctx, pool, row)
 		if err1 != nil {
 			return err1
 		}
@@ -34,7 +43,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 			return err1
 		}
 		//fmt.Println(row)
-		err1 = database.Solve(db, row)
+		err1 = database.Solve(ctx, pool, row)
 		if err1 != nil {
 			return err1
 		}
@@ -45,7 +54,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 			return err1
 		}
 		//fmt.Println(row)
-		err1 = database.Accept(db, row)
+		err1 = database.Accept(ctx, pool, row)
 		if err1 != nil {
 			return err1
 		}
@@ -56,7 +65,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 			return err1
 		}
 		//fmt.Println(row)
-		err1 = database.Reject(db, row)
+		err1 = database.Reject(ctx, pool, row)
 		if err1 != nil {
 			return err1
 		}
@@ -67,7 +76,7 @@ func ParseOTLog(vLog types.Log, txTime string, sender string, db *sql.DB) (err e
 			return err1
 		}
 		//fmt.Println(row)
-		err1 = database.Confirm(db, row)
+		err1 = database.Confirm(ctx, pool, row)
 		if err1 != nil {
 			return err1
 		}

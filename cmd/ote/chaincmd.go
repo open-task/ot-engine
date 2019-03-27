@@ -13,8 +13,11 @@ import (
 	"gopkg.in/urfave/cli.v2"
 	"log"
 	"math/big"
+	"os"
+	"os/signal"
 	"time"
 )
+
 const interval = "1m"
 
 var (
@@ -90,12 +93,27 @@ func download(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open("mysql", cfg.DSN())
+	pool, err := sql.Open("mysql", cfg.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.SetMaxOpenConns(2)
+	pool.SetConnMaxLifetime(0)
+	pool.SetMaxIdleConns(2)
+	pool.SetMaxOpenConns(2)
 	fmt.Println("Database connection opened.")
+
+	dbctx, stop := context.WithCancel(context.Background())
+	defer stop()
+	appSignal := make(chan os.Signal, 3)
+	signal.Notify(appSignal, os.Interrupt)
+
+	go func() {
+		select {
+		case <-appSignal:
+			log.Println("download got stop signal, shutdown context now ...")
+			stop()
+		}
+	}()
 
 	shanghai, _ := time.LoadLocation("Asia/Shanghai")
 
@@ -117,7 +135,7 @@ func download(ctx *cli.Context) (err error) {
 		signer := types.NewEIP155Signer(tx.ChainId())
 		sender, err := signer.Sender(tx)
 
-		err = process.ParseOTLog(vLog, timeStr, sender.String(), db)
+		err = process.ParseOTLog(dbctx, vLog, timeStr, sender.String(), pool)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -154,17 +172,27 @@ func listen(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open("mysql", cfg.DSN())
+	pool, err := sql.Open("mysql", cfg.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.SetMaxOpenConns(2)
+	pool.SetConnMaxLifetime(0)
+	pool.SetMaxIdleConns(3)
+	pool.SetMaxOpenConns(3)
 	fmt.Println("Database connection opened.")
+	dbctx, stop := context.WithCancel(context.Background())
+	defer stop()
 
 	shanghai, _ := time.LoadLocation("Asia/Shanghai")
 
+	appSignal := make(chan os.Signal, 3)
+	signal.Notify(appSignal, os.Interrupt)
 	for {
 		select {
+		case <-appSignal:
+			log.Println("listen got stop signal, shutdown context now ...")
+			stop()
+			os.Exit(-1)
 		case err := <-sub.Err():
 			fmt.Errorf("Got Err when listen: %s", err)
 			break // this will exit the program, and auto restart by supervisor in PRODUCTION
@@ -190,7 +218,7 @@ func listen(ctx *cli.Context) (err error) {
 				continue
 			}
 
-			err = process.ParseOTLog(vLog, timeStr, sender.String(), db)
+			err = process.ParseOTLog(dbctx, vLog, timeStr, sender.String(), pool)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -205,23 +233,38 @@ func timer(ctx *cli.Context) (err error) {
 	cfg := LoadConfig(ctx)
 	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
 
-	db, err := sql.Open("mysql", cfg.DSN())
+	pool, err := sql.Open("mysql", cfg.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.SetMaxOpenConns(2)
+	pool.SetConnMaxLifetime(0)
+	pool.SetMaxIdleConns(3)
+	pool.SetMaxOpenConns(3)
 	fmt.Println("Database connection opened.")
+
+	dbctx, stop := context.WithCancel(context.Background())
+	defer stop()
+	appSignal := make(chan os.Signal, 3)
+	signal.Notify(appSignal, os.Interrupt)
+
+	go func() {
+		select {
+		case <-appSignal:
+			log.Println("timer got stop signal, shutdown context now ...")
+			stop()
+		}
+	}()
 
 	duration, _ := time.ParseDuration(interval)
 	timer := time.NewTimer(duration)
 
-	utils.Download(cfg.Node, db)
+	utils.Download(dbctx, cfg.Node, pool)
 	fmt.Printf("Sleep %s...\n", interval)
 	timer.Reset(duration)
 	for {
 		select {
 		case <-timer.C:
-			utils.Download(cfg.Node, db)
+			utils.Download(dbctx, cfg.Node, pool)
 			fmt.Printf("Sleep %s...\n", interval)
 			timer.Reset(duration)
 		}
