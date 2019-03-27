@@ -2,9 +2,9 @@ package collect
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/open-task/ot-engine/database"
 	. "github.com/open-task/ot-engine/types"
+	"log"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
 	publishList, err := database.GetAllPublished(db, offset, limit)
 	if err != nil {
-		fmt.Printf("Error when GetMission: %s", err)
+		log.Printf("Error when GetMission: %s", err)
 		return missions, err
 	}
 	var missionIdList []string
@@ -27,7 +27,7 @@ func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err 
 	}
 	solutions, err := GetSolutions(db, missionIdList)
 	if err != nil {
-		fmt.Printf("Error when GetSolutions: %s", err)
+		log.Printf("Error when GetSolutions: %s", err)
 		return missions, err
 	}
 	fillMissions(&missions, &solutions)
@@ -38,7 +38,7 @@ func GetAllMissions(db *sql.DB, offset int, limit int) (missions []Mission, err 
 func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err error) {
 	publishList, err := database.GetPublished(db, address, limit)
 	if err != nil {
-		fmt.Printf("Error when GetMission: %s", err)
+		log.Printf("Error when GetMission: %s", err)
 		return missions, err
 	}
 	var missionIdList []string
@@ -50,7 +50,7 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 	}
 	solutions, err := GetSolutions(db, missionIdList)
 	if err != nil {
-		fmt.Printf("Error when GetSolutions: %s", err)
+		log.Printf("Error when GetSolutions: %s", err)
 		return missions, err
 	}
 	fillMissions(&missions, &solutions)
@@ -60,7 +60,7 @@ func GetMissions(db *sql.DB, address string, limit int) (missions []Mission, err
 func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err error) {
 	publishList, err := database.GetUnsolved(db, offset, limit)
 	if err != nil {
-		fmt.Printf("Error when GetMission: %s", err)
+		log.Printf("Error when GetMission: %s", err)
 		return missions, err
 	}
 	var missionIdList []string
@@ -72,7 +72,7 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err err
 	}
 	solutions, err := GetSolutions(db, missionIdList)
 	if err != nil {
-		fmt.Printf("Error when GetSolutions: %s", err)
+		log.Printf("Error when GetSolutions: %s", err)
 		return missions, err
 	}
 	fillMissions(&missions, &solutions)
@@ -83,7 +83,7 @@ func GetUnsolved(db *sql.DB, offset int, limit int) (missions []Mission, err err
 func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
 	publish, err := database.GetOneMission(db, id)
 	if err != nil {
-		fmt.Printf("Error when GetOneMission: %s", err)
+		log.Printf("Error when GetOneMission: %s", err)
 		return m, err
 	}
 	var missions []Mission
@@ -95,7 +95,7 @@ func GetOneMission(db *sql.DB, id string) (m Mission, err error) {
 
 	solutions, err := GetSolutions(db, missionIdList)
 	if err != nil {
-		fmt.Printf("Error when GetSolutions: %s", err)
+		log.Printf("Error when GetSolutions: %s", err)
 		// half result, no solutions
 		return m, nil
 	}

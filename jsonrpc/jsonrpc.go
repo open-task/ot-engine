@@ -2,7 +2,6 @@ package jsonrpc
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/open-task/ot-engine/collect"
 	. "github.com/open-task/ot-engine/types"
 	"log"
@@ -15,12 +14,16 @@ type EngineRPC struct {
 
 func (e *EngineRPC) GetAllPublished(offset int, limit int) (missions []Mission) {
 	log.Printf("GetAllPublished called: offset = %d, limit = %d\n", offset, limit)
+	err := e.DB.Ping()
+	if err != nil {
+		log.Printf("Error when ping database: %s", err.Error())
+	}
 	missions1, err := collect.GetAllMissions(e.DB, offset, limit)
 	if err != nil {
-		fmt.Printf("Error When GetMission: %s", err.Error())
+		log.Printf("Error When GetMission: %s", err.Error())
 	} else {
 		missions = missions1
-		fmt.Println(missions1)
+		log.Println(missions1)
 	}
 	log.Printf("GetAllPublished return %d missions\n", len(missions))
 	return missions

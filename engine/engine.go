@@ -1,12 +1,15 @@
 package engine
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kanocz/goginjsonrpc"
 	"github.com/open-task/ot-engine/jsonrpc"
 	"log"
 	"net/http"
+	"time"
 )
 
 import _ "github.com/go-sql-driver/mysql"
@@ -40,12 +43,28 @@ func (e *OtEngineServer) Setup() {
 
 	// Health Check
 	e.Engine.GET("/ping", func(c *gin.Context) {
-		c.String(http.StatusOK, "pong")
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
 	})
-
+	e.Engine.GET("healthz", e.healthz)
 	e.RPC = &jsonrpc.EngineRPC{Version: "0.2.0", DB: e.DB}
 	e.Engine.POST("/v1/", func(c *gin.Context) {
 		goginjsonrpc.ProcessJsonRPC(c, e.RPC)
+	})
+}
+
+func (e *OtEngineServer) healthz(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 1*time.Second)
+	defer cancel()
+
+	err := e.DB.PingContext(ctx)
+	if err != nil {
+		c.JSON(http.StatusFailedDependency, gin.H{"message": fmt.Sprintf("db down: %v", err)})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ok",
 	})
 }
 
