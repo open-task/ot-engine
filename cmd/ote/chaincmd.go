@@ -125,7 +125,7 @@ func download(ctx *cli.Context) (err error) {
 			continue
 		}
 		txTime := header.Time
-		timeStr := time.Unix(txTime.Int64(), 0).In(shanghai).String()
+		timeStr := time.Unix(int64(txTime), 0).In(shanghai).String()
 
 		tx, _, err := client.TransactionByHash(context.Background(), vLog.TxHash)
 		if err != nil {
@@ -203,7 +203,7 @@ func listen(ctx *cli.Context) (err error) {
 				continue
 			}
 			txTime := header.Time
-			timeStr := time.Unix(txTime.Int64(), 0).In(shanghai).String()
+			timeStr := time.Unix(int64(txTime), 0).In(shanghai).String()
 
 			tx, _, err := client.TransactionByHash(context.Background(), vLog.TxHash)
 			if err != nil {
