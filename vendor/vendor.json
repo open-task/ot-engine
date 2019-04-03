@@ -21,12 +21,6 @@
 			"revisionTime": "2019-03-15T20:16:42Z"
 		},
 		{
-			"checksumSHA1": "qcmOtVyUQhzk0lT+92Fx2sjrIv8=",
-			"path": "github.com/ethereum/go-ethereum",
-			"revision": "5164274872a4b3cca2c2f0ce77ae44c39c663402",
-			"revisionTime": "2019-04-03T07:15:15Z"
-		},
-		{
 			"checksumSHA1": "31g2Df8m5bWEOg3UE6YJVQpSlWY=",
 			"path": "github.com/ethereum/go-ethereum/common",
 			"revision": "5164274872a4b3cca2c2f0ce77ae44c39c663402",
