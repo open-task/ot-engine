@@ -1,4 +1,6 @@
 CREATE DATABASE kovan3 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'engine'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON kovan3.* To 'engine'@'localhost';
 
 CREATE TABLE IF NOT EXISTS mission (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
