@@ -278,7 +278,7 @@ WHERE mission_id = ?`)
 	var rewardStr sql.NullString
 	var solved bool
 
-	err = stmt.QueryRowContext(ctx, id, 1).Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
+	err = stmt.QueryRow(id).Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
 	if err != nil {
 		log.Println(err)
 		return
