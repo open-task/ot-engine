@@ -123,6 +123,7 @@ solution_id, arbitration_id, block, tx, txtime
 }
 
 func GetAllPublished(ctx context.Context, db *sql.DB, offset int, limit int) (events []PublishEvent, err error) {
+	log.Printf("database.GetAllPublished called: offset = %d, limit = %d\n", offset, limit)
 	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
@@ -134,11 +135,13 @@ LIMIT ?, ?`)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(offset, limit)
+	rows, err := stmt.QueryContext(ctx, offset, limit)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
+	log.Println("get rows")
 	for rows.Next() {
 		var p PublishEvent
 		var solved bool
@@ -161,6 +164,9 @@ LIMIT ?, ?`)
 		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		events = append(events, p)
 	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
 	return events, err
 }
 
@@ -177,11 +183,12 @@ LIMIT ?`)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(address, limit)
+	rows, err := stmt.QueryContext(ctx, address, limit)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var p PublishEvent
 		var solved bool
@@ -204,6 +211,9 @@ LIMIT ?`)
 		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		events = append(events, p)
 	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
 	return events, err
 }
 
@@ -220,11 +230,12 @@ LIMIT ?, ?`)
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(offset, limit)
+	rows, err := stmt.QueryContext(ctx, offset, limit)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var p PublishEvent
 		var solved bool
@@ -247,6 +258,9 @@ LIMIT ?, ?`)
 		p.RewardInDET.Quo(p.RewardInDET, Decimals)
 		events = append(events, p)
 	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
 	return events, err
 }
 
@@ -254,40 +268,33 @@ func GetOneMission(ctx context.Context, db *sql.DB, id string) (p PublishEvent, 
 	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
-WHERE mission_id = ?
-LIMIT 1`)
+WHERE mission_id = ?`)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.Query(id)
+	var rewardStr sql.NullString
+	var solved bool
+
+	err = stmt.QueryRowContext(ctx, id, 1).Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	for rows.Next() {
-		var rewardStr sql.NullString
-		var solved bool
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		p.UpdateStatus(solved)
-		var success bool
-		p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
-		if !success {
-			p.Reward = big.NewInt(0)
-		}
-		p.RewardInDET, success = big.NewFloat(0).SetString(rewardStr.String)
-		if !success {
-			p.RewardInDET = big.NewFloat(0)
-		}
-		p.RewardInDET.Quo(p.RewardInDET, Decimals)
-		break
+	p.UpdateStatus(solved)
+	var success bool
+	p.Reward, success = big.NewInt(0).SetString(rewardStr.String, 10)
+	if !success {
+		p.Reward = big.NewInt(0)
 	}
+	p.RewardInDET, success = big.NewFloat(0).SetString(rewardStr.String)
+	if !success {
+		p.RewardInDET = big.NewFloat(0)
+	}
+	p.RewardInDET.Quo(p.RewardInDET, Decimals)
+
 	return
 }
 
@@ -305,6 +312,7 @@ func GetSolutions(ctx context.Context, db *sql.DB, missions []string) (solutions
 		fmt.Printf("Database Error when retrive solution: %s", err.Error())
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var s Solution
 		err1 := rows.Scan(&s.Block, &s.Tx, &s.Mission, &s.Solution, &s.Data, &s.Solver, &s.TxTime)
@@ -315,6 +323,9 @@ func GetSolutions(ctx context.Context, db *sql.DB, missions []string) (solutions
 		s.Status = Unprocessed
 		solutions = append(solutions, s)
 		ids = append(ids, s.Solution)
+	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	return
@@ -341,6 +352,7 @@ func getProcessed(ctx context.Context, db *sql.DB, solutions []string, action st
 		fmt.Printf("Database Error when retrive %s: %s", action, err.Error())
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var p Process
 		err1 := rows.Scan(&p.Block, &p.Tx, &p.Solution, &p.TxTime)
@@ -351,6 +363,9 @@ func getProcessed(ctx context.Context, db *sql.DB, solutions []string, action st
 		p.Action = action
 		process = append(process, p)
 		ids = append(ids, p.Solution) // success ids
+	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	return
@@ -403,6 +418,7 @@ func GetFrom(ctx context.Context, db *sql.DB) (from *big.Int, err error) {
 		log.Println(err)
 		return nil, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var rewardStr sql.NullString
 		err = rows.Scan(&rewardStr)
@@ -416,6 +432,9 @@ func GetFrom(ctx context.Context, db *sql.DB) (from *big.Int, err error) {
 			from = big.NewInt(0)
 		}
 		break
+	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	return from, err

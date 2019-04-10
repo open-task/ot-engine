@@ -14,6 +14,7 @@ const (
 )
 
 func GetAllMissions(ctx context.Context, db *sql.DB, offset int, limit int) (missions []Mission, err error) {
+	log.Printf("retrive.GetAllMissions called: offset = %d, limit = %d\n", offset, limit)
 	publishList, err := database.GetAllPublished(ctx, db, offset, limit)
 	if err != nil {
 		log.Printf("Error when GetMission: %s", err)

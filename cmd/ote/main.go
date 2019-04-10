@@ -14,7 +14,7 @@ func init() {
 	app = &cli.App{
 		Name:    filepath.Base(os.Args[0]),
 		Usage:   "The ote(OpenTask Engine) command line interface",
-		Version: "0.3.0",
+		Version: "0.3.1",
 		Action:  ote,
 	}
 	Info(app)
