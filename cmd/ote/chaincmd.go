@@ -158,7 +158,7 @@ func listen(ctx *cli.Context) (err error) {
 
 	client, err := ethclient.Dial(cfg.Node.Server)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error when dail:", err)
 	}
 
 	address := common.HexToAddress(cfg.Node.Contract)
@@ -169,7 +169,7 @@ func listen(ctx *cli.Context) (err error) {
 	sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error when subscribe:", err)
 	}
 
 	pool, err := sql.Open("mysql", cfg.DSN())
@@ -197,9 +197,10 @@ func listen(ctx *cli.Context) (err error) {
 			fmt.Errorf("Got Err when listen: %s", err)
 			break // this will exit the program, and auto restart by supervisor in PRODUCTION
 		case vLog := <-logs:
+			log.Println("listen got a event log, try to process it now ...")
 			header, err := client.HeaderByHash(context.Background(), vLog.BlockHash)
 			if err != nil {
-				fmt.Println(err)
+				log.Println("get header by hash error:", err)
 				continue
 			}
 			txTime := header.Time
@@ -207,22 +208,23 @@ func listen(ctx *cli.Context) (err error) {
 
 			tx, _, err := client.TransactionByHash(context.Background(), vLog.TxHash)
 			if err != nil {
-				fmt.Println(err)
+				log.Println("get tx by hash error:", err)
 				continue
 			}
 			signer := types.NewEIP155Signer(tx.ChainId())
 			sender, err := signer.Sender(tx)
 
 			if err != nil {
-				fmt.Println(err)
+				log.Println("get sender from tx error:", err)
 				continue
 			}
 
 			err = process.ParseOTLog(dbctx, vLog, timeStr, sender.String(), pool)
 			if err != nil {
-				fmt.Println(err)
+				log.Println("ParseOTLog error:", err)
 				continue
 			}
+			log.Println("event log process done.")
 		}
 	}
 	fmt.Println("Listen process finished")

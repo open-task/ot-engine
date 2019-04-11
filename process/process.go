@@ -3,7 +3,6 @@ package process
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/open-task/ot-engine/contracts"
@@ -17,6 +16,7 @@ import (
 )
 
 func ParseOTLog(ctx context.Context, vLog types.Log, txTime string, sender string, pool *sql.DB) (err error) {
+	log.Println("enter ParseOTLog")
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -26,62 +26,72 @@ func ParseOTLog(ctx context.Context, vLog types.Log, txTime string, sender strin
 
 	switch vLog.Topics[0].String() {
 	case PublishSigHash.Hex():
-		fmt.Println("Publish")
+		log.Println("Publish event processing")
 		row, err1 := Publish(vLog, txTime, sender)
 		if err1 != nil {
+			log.Println("Error when Parse Publish event:", err1)
 			return err1
 		}
-		//fmt.Println(row)
+		log.Println(row)
 		err1 = database.Publish(ctx, pool, row)
 		if err1 != nil {
+			log.Println("Error when Insert Publish event:", err1)
 			return err1
 		}
 	case SolveSigHash.Hex():
-		fmt.Println("Solve")
+		log.Println("Solve event processing")
 		row, err1 := Solve(vLog, txTime, sender)
 		if err1 != nil {
+			log.Println("Error when Parse Solve event:", err1)
 			return err1
 		}
-		//fmt.Println(row)
+		log.Println(row)
 		err1 = database.Solve(ctx, pool, row)
 		if err1 != nil {
+			log.Println("Error when Insert Solve event:", err1)
 			return err1
 		}
 	case AcceptSigHash.Hex():
-		fmt.Println("Accept")
+		log.Println("Accept event processing")
 		row, err1 := Accept(vLog, txTime, sender)
 		if err1 != nil {
+			log.Println("Error when Parse Accept event:", err1)
 			return err1
 		}
-		//fmt.Println(row)
+		log.Println(row)
 		err1 = database.Accept(ctx, pool, row)
 		if err1 != nil {
+			log.Println("Error when Insert Accept event:", err1)
 			return err1
 		}
 	case RejectSigHash.Hex():
-		fmt.Println("Reject")
+		log.Println("Reject event processing")
 		row, err1 := Reject(vLog, txTime, sender)
 		if err1 != nil {
+			log.Println("Error when Parse Reject event:", err1)
 			return err1
 		}
-		//fmt.Println(row)
+		log.Println(row)
 		err1 = database.Reject(ctx, pool, row)
 		if err1 != nil {
+			log.Println("Error when Insert Reject event:", err1)
 			return err1
 		}
 	case ConfirmSigHash.Hex():
-		fmt.Println("Confirm")
+		log.Println("Confirm event processing")
 		row, err1 := Confirm(vLog, txTime, sender)
 		if err1 != nil {
+			log.Println("Error when Parse Confirm event:", err1)
 			return err1
 		}
-		//fmt.Println(row)
+		log.Println(row)
 		err1 = database.Confirm(ctx, pool, row)
 		if err1 != nil {
+			log.Println("Error when Insert Confirm event:", err1)
 			return err1
 		}
 	default:
-		fmt.Println("UNKNOWN Event")
+		log.Println("UNKNOWN Event")
 	}
 	return
 }
@@ -104,7 +114,7 @@ func Publish(vLog types.Log, txTime string, sender string) (p otTypes.PublishEve
 		return p, err
 	}
 
-	fmt.Printf("missionId: %s, reward: %s\n\n", event.MissionId, event.RewardInWei.String())
+	log.Printf("missionId: %s, reward: %s\n\n", event.MissionId, event.RewardInWei.String())
 
 	p.Mission = event.MissionId
 	p.Reward = event.RewardInWei
@@ -134,7 +144,7 @@ func Solve(vLog types.Log, txTime string, sender string) (s otTypes.SolveEvent, 
 		return s, err
 	}
 
-	fmt.Printf("solutionId: %s, missionId: %s, data: %s\n", event.SolutionId, event.MissionId, event.Data)
+	log.Printf("solutionId: %s, missionId: %s, data: %s\n", event.SolutionId, event.MissionId, event.Data)
 
 	s.Solution = event.SolutionId
 	s.Mission = event.MissionId
@@ -162,7 +172,7 @@ func Accept(vLog types.Log, txTime string, sender string) (a otTypes.AcceptEvent
 		return a, err
 	}
 
-	fmt.Printf("solutionId: %s\n", event.SolutionId)
+	log.Printf("solutionId: %s\n", event.SolutionId)
 
 	a.Solution = event.SolutionId
 	a.Block = vLog.BlockNumber
@@ -188,7 +198,7 @@ func Reject(vLog types.Log, txTime string, sender string) (r otTypes.RejectEvent
 		return r, err
 	}
 
-	fmt.Printf("solutionId: %s\n", event.SolutionId)
+	log.Printf("solutionId: %s\n", event.SolutionId)
 
 	r.Solution = event.SolutionId
 	r.Block = vLog.BlockNumber
@@ -199,7 +209,7 @@ func Reject(vLog types.Log, txTime string, sender string) (r otTypes.RejectEvent
 }
 
 func Confirm(vLog types.Log, txTime string, sender string) (c otTypes.ConfirmEvent, err error) {
-	fmt.Println("Confirm")
+	log.Println("Confirm")
 	event := struct {
 		SolutionId    string
 		ArbitrationId string
@@ -216,7 +226,7 @@ func Confirm(vLog types.Log, txTime string, sender string) (c otTypes.ConfirmEve
 		return c, err
 	}
 
-	fmt.Printf("solutionId: %s, missionId: %s\n", event.SolutionId, event.ArbitrationId)
+	log.Printf("solutionId: %s, missionId: %s\n", event.SolutionId, event.ArbitrationId)
 
 	c.Solution = event.SolutionId
 	c.Arbitration = event.ArbitrationId
