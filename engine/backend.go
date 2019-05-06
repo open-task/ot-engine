@@ -26,6 +26,7 @@ func fetchAllSkill(c *gin.Context) {
 	})
 }
 
+// curl -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/s1
 func fetchSkill(c *gin.Context) {
 	user := c.Param("user")
 	skill := c.Param("skill")
@@ -56,9 +57,10 @@ func updateSkill(c *gin.Context) {
 	})
 }
 
+// curl -X GET http://127.0.0.1:8080/backend/v1/skills/top?limit=30
 func topSkills(c *gin.Context) {
-	limit := c.Param("limit")
-	log.Printf("limit = %d\n", limit)
+	limit := c.Query("limit")
+	log.Printf("limit = %s\n", limit)
 
 	c.JSON(http.StatusOK, gin.H{
 		"msg": "It works.",

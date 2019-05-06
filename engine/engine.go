@@ -66,7 +66,7 @@ func (e *OtEngineServer) Setup() {
 		}
 		skills := backend.Group("/skills")
 		{
-			skills.GET("/top",topSkills)
+			skills.GET("/top", topSkills)
 		}
 	}
 }
