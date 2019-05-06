@@ -127,6 +127,7 @@ func GetAllPublished(ctx context.Context, db *sql.DB, offset int, limit int) (ev
 	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
+WHERE filter = 0
 ORDER BY block DESC
 LIMIT ?, ?`)
 	if err != nil {
@@ -174,7 +175,7 @@ func GetPublished(ctx context.Context, db *sql.DB, address string, limit int) (e
 	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, publisher, solution_num, solved, txtime
 FROM mission
-WHERE publisher = ?
+WHERE filter = 0 AND publisher = ?
 ORDER BY block DESC
 LIMIT ?`)
 	if err != nil {
@@ -221,7 +222,7 @@ func GetUnsolved(ctx context.Context, db *sql.DB, offset int, limit int) (events
 	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
-WHERE solved = FALSE
+WHERE filter = 0 AND solved = FALSE
 ORDER BY block DESC
 LIMIT ?, ?`)
 	if err != nil {
@@ -268,7 +269,7 @@ func GetOneMission(ctx context.Context, db *sql.DB, id string) (p PublishEvent, 
 	stmt, err := db.PrepareContext(ctx, `SELECT
 block, tx, mission_id, reward, context, publisher, solution_num, solved, txtime
 FROM mission
-WHERE mission_id = ?`)
+WHERE filter = 0 AND mission_id = ?`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -303,7 +304,7 @@ func GetSolutions(ctx context.Context, db *sql.DB, missions []string) (solutions
 		err = errors.New("no mission id")
 		return
 	}
-	query := "SELECT block, tx, mission_id, solution_id, context, solver, txtime FROM solution WHERE mission_id in ('"
+	query := "SELECT block, tx, mission_id, solution_id, context, solver, txtime FROM solution WHERE filter = 0 AND mission_id in ('"
 	query += strings.Join(missions, "','")
 	query += "') ORDER BY block DESC;"
 
@@ -343,7 +344,7 @@ func getProcessed(ctx context.Context, db *sql.DB, solutions []string, action st
 	}
 	query := "SELECT block, tx, solution_id, txtime FROM "
 	query += action
-	query += " WHERE solution_id in ('"
+	query += " WHERE filter = 0 AND solution_id in ('"
 	query += strings.Join(solutions, "','")
 	query += "') ORDER BY block DESC;"
 
