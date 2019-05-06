@@ -52,6 +52,19 @@ func (e *OtEngineServer) Setup() {
 	e.Engine.POST("/v1/", func(c *gin.Context) {
 		goginjsonrpc.ProcessJsonRPC(c, e.RPC)
 	})
+
+	backend := e.Engine.Group("/backend/v1")
+	{
+		user := backend.Group("/user/:user")
+		{
+			user.GET("/skill", fetchAllSkill)
+			user.GET("/skill/:skill", fetchSkill)
+			user.POST("/skill", addSkill)
+			user.PUT("/skill", updateSkill)
+			user.PATCH("/skill", updateSkill)
+			user.DELETE("/skill", deleteSkill)
+		}
+	}
 }
 
 func (e *OtEngineServer) healthz(c *gin.Context) {
