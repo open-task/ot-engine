@@ -64,6 +64,10 @@ func (e *OtEngineServer) Setup() {
 			user.PATCH("/skill", updateSkill)
 			user.DELETE("/skill", deleteSkill)
 		}
+		skills := backend.Group("/skills")
+		{
+			skills.GET("/top",topSkills)
+		}
 	}
 }
 
