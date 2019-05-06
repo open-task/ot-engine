@@ -344,7 +344,7 @@ func getProcessed(ctx context.Context, db *sql.DB, solutions []string, action st
 	}
 	query := "SELECT block, tx, solution_id, txtime FROM "
 	query += action
-	query += " WHERE filter = 0 AND solution_id in ('"
+	query += " WHERE solution_id in ('"
 	query += strings.Join(solutions, "','")
 	query += "') ORDER BY block DESC;"
 
