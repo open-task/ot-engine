@@ -52,17 +52,20 @@ func (e *OtEngineServer) Setup() {
 	e.Engine.POST("/v1/", func(c *gin.Context) {
 		goginjsonrpc.ProcessJsonRPC(c, e.RPC)
 	})
+	e.Engine.POST("/engine/v2/", func(c *gin.Context) {
+		goginjsonrpc.ProcessJsonRPC(c, e.RPC)
+	})
 
 	backend := e.Engine.Group("/backend/v1")
 	{
 		user := backend.Group("/user/:user")
 		{
-			user.GET("/skill", fetchAllSkill)
-			user.GET("/skill/:skill", fetchSkill)
-			user.POST("/skill", addSkill)
-			user.PUT("/skill", updateSkill)
-			user.PATCH("/skill", updateSkill)
-			user.DELETE("/skill", deleteSkill)
+			user.GET("/skill", fetchUserSkills)
+			user.GET("/skill/:skill", fetchUserSkill)
+			user.POST("/skill/:skill", addUserSkill)
+			user.PUT("/skill/:skill", updateUserSkill)
+			user.PATCH("/skill/:skill", updateUserSkill)
+			user.DELETE("/skill/:skill", deleteUserSkill)
 		}
 		skills := backend.Group("/skill")
 		{

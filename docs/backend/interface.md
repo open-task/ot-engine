@@ -14,9 +14,63 @@ URL|请求方法|含义|参数
 
 ## GET /backend/v1/user/:user/skill 获得某用户的全部技能列表
 
+### 请求参数
+
+### 返回参数
+
+### 示例
+```bash
+curl -s -X GET '47.92.64.129/backend/v1/user/u1/skill'| jq .
+```
 ## GET /backend/v1/user/:user/skill/:skill 获得技能信息
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+
 ## POST /backend/v1/user/:user/skill/:skill 添加技能
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+
 ## PUT /backend/v1/user/:user/skill/:skill 更新技能
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+
 ## PATCH /backend/v1/user/:user/skill/:skill 更新技能
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+
 ## DELETE /backend/v1/user/:user/skill/:skill 删除技能
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+
 ## GET /backend/v1/skill/top 获得全系统的技能列表
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+
+```bash
+curl -s -X GET '47.92.64.129/backend/v1/skill/top'| jq .
+curl -s -X GET '47.92.64.129/backend/v1/skill/top?limit=30'| jq .
+```
