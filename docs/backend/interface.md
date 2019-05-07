@@ -13,6 +13,7 @@ URL|请求方法|含义|参数
 /backend/v1/skill/top|GET|获得全系统的技能列表|`limit`: 结果条数
 
 ## GET /backend/v1/user/:user/skill 获得某用户的全部技能列表
+
 ## GET /backend/v1/user/:user/skill/:skill 获得技能信息
 ## POST /backend/v1/user/:user/skill/:skill 添加技能
 ## PUT /backend/v1/user/:user/skill/:skill 更新技能

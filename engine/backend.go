@@ -12,7 +12,8 @@ func addSkill(c *gin.Context) {
 	log.Printf("user: %s, skill: %s\n", user, skill)
 
 	c.JSON(http.StatusOK, gin.H{
-		"msg": "It works.",
+		"user": user,
+		"msg":  "It works.",
 	})
 }
 
