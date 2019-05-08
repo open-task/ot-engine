@@ -71,9 +71,24 @@ curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:
 
 ### 请求参数
 
+- `user`: 用户公钥地址
+- `skill`: 技能ID
 ### 返回参数
 
 ### 示例
+```bash
+curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/1 | jq .
+```
+
+```json
+{
+  "Id": 1,
+  "user": "u1",
+  "skill": "s1",
+  "status": 0,
+  "update_time": "2019-05-08 17:35:12"
+}
+```
 
 ## PUT /backend/v1/user/:user/skill/:skill 更新技能
 

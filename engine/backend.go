@@ -83,7 +83,7 @@ WHERE filter=0
 
 	for rows.Next() {
 		var s Skill
-		err = rows.Scan(&s.Id, &s.User, &s.Skill, &s.Status,&s.UpdateTime)
+		err = rows.Scan(&s.Id, &s.User, &s.Skill, &s.Status, &s.UpdateTime)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -92,25 +92,37 @@ WHERE filter=0
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
 		return
 	}
 	c.JSON(http.StatusOK, skills)
 }
 
-// curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/s1 | jq .
+// curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/1 | jq .
 func FetchUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
 	skill := c.Param("skill")
 	log.Printf("user: %s, skill: %s\n", user, skill)
 
-	err = db.QueryRow("select name from users where id = ?", 1).Scan(&name)
-	s1 := Skill{
-		User:  user,
-		Skill: skill,
+	var s Skill
+	err := db.QueryRow(`
+SELECT id,
+       addr,
+       skill,
+       status,
+       updatetime
+FROM skill
+WHERE id=?
+  AND addr = ?
+`, skill, user).Scan(&s.Id, &s.User, &s.Skill, &s.Status, &s.UpdateTime)
+	if err != nil {
+		// TODO: empty set
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
 	}
-	c.JSON(http.StatusOK, s1)
+	c.JSON(http.StatusOK, s)
 }
 
 // curl -s -X DELETE http://127.0.0.1:8080/backend/v1/user/u1/skill/s1 | jq .
