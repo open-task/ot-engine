@@ -8,8 +8,11 @@ import (
 )
 
 type Skill struct {
-	User  string `json:"user"`
-	Skill string `json:"skill"`
+	Id         int64  `json:id`
+	User       string `json:"user"`
+	Skill      string `json:"skill"`
+	Status     int    `json:"status"`
+	UpdateTime string `json:"update_time"`
 }
 
 // curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
@@ -18,26 +21,82 @@ func AddUserSkill(c *gin.Context, db *sql.DB) {
 	skill := c.PostForm("skill")
 	log.Printf("user: %s, skill: %s\n", user, skill)
 
-	s1 := Skill{
-		User:  user,
-		Skill: skill,
+	// TODO: check the input format
+
+	stmtIns, err := db.Prepare(`INSERT INTO skill (addr, skill) VALUES(?, ?)`)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
 	}
-	c.JSON(http.StatusOK, s1)
+	defer stmtIns.Close()
+	res, err := stmtIns.Exec(user, skill)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, Skill{
+		Id:     id,
+		User:   user,
+		Skill:  skill,
+		Status: 0,
+	})
 }
 
 // curl -s -X GET '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
 func FetchUserSkills(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	skill := c.Param("skill")
-	log.Printf("user: %s, skill: %s\n", user, skill)
-
-	dummy := []Skill{
-		{
-			User:  "u1",
-			Skill: "s1",
-		},
+	log.Printf("user: %s\n", user)
+	stmtOuts, err := db.Prepare(`
+SELECT id,
+       addr,
+       skill,
+       status,
+       updatetime
+FROM skill
+WHERE filter=0
+  AND addr = ?
+`)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
 	}
-	c.JSON(http.StatusOK, dummy)
+	defer stmtOuts.Close()
+	rows, err := stmtOuts.Query(user)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	defer rows.Close()
+
+	var skills []Skill
+
+	for rows.Next() {
+		var s Skill
+		err = rows.Scan(&s.Id, &s.User, &s.Skill, &s.Status,&s.UpdateTime)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		skills = append(skills, s)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	c.JSON(http.StatusOK, skills)
 }
 
 // curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/s1 | jq .
@@ -45,6 +104,8 @@ func FetchUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
 	skill := c.Param("skill")
 	log.Printf("user: %s, skill: %s\n", user, skill)
+
+	err = db.QueryRow("select name from users where id = ?", 1).Scan(&name)
 	s1 := Skill{
 		User:  user,
 		Skill: skill,

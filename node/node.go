@@ -122,11 +122,11 @@ func (n *Node) Setup() {
 			user.GET("/skill", func(c *gin.Context) {
 				engine.FetchUserSkills(c, n.BackendDB)
 			})
+			user.POST("/skill", func(c *gin.Context) {
+				engine.AddUserSkill(c, n.BackendDB)
+			})
 			user.GET("/skill/:skill", func(c *gin.Context) {
 				engine.FetchUserSkill(c, n.BackendDB)
-			})
-			user.POST("/skill/:skill", func(c *gin.Context) {
-				engine.AddUserSkill(c, n.BackendDB)
 			})
 			user.PUT("/skill/:skill", func(c *gin.Context) {
 				engine.UpdateUserSkill(c, n.BackendDB)

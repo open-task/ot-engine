@@ -147,7 +147,13 @@ LIMIT ?, ?`)
 		var p PublishEvent
 		var solved bool
 		var rewardStr sql.NullString
-		err = rows.Scan(&p.Block, &p.Tx, &p.Mission, &rewardStr, &p.Data, &p.Publisher, &p.SolutionNumber, &solved, &p.TxTime)
+		err = rows.Scan(&p.Block,
+			&p.Tx, &p.Mission,
+			&rewardStr, &p.Data,
+			&p.Publisher,
+			&p.SolutionNumber,
+			&solved,
+			&p.TxTime)
 		if err != nil {
 			log.Println(err)
 			continue
