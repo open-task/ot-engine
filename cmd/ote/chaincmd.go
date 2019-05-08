@@ -93,7 +93,7 @@ func download(ctx *cli.Context) (err error) {
 		log.Fatal(err)
 	}
 
-	pool, err := sql.Open("mysql", cfg.DSN())
+	pool, err := sql.Open("mysql", cfg.Engine.Database.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -145,9 +145,12 @@ func download(ctx *cli.Context) (err error) {
 }
 
 func serve(ctx *cli.Context) error {
-	engine := makeConfigEngine(ctx)
-	engine.Setup()
-	engine.Serve()
+	//engine := makeConfigEngine(ctx)
+	//engine.Setup()
+	//engine.Serve()
+	node := makeConfigNode(ctx)
+	node.Setup()
+	node.Serve()
 	return nil
 }
 
@@ -172,7 +175,7 @@ func listen(ctx *cli.Context) (err error) {
 		log.Fatal("Error when subscribe:", err)
 	}
 
-	pool, err := sql.Open("mysql", cfg.DSN())
+	pool, err := sql.Open("mysql", cfg.Engine.Database.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -235,7 +238,7 @@ func timer(ctx *cli.Context) (err error) {
 	cfg := LoadConfig(ctx)
 	fmt.Printf("server: %s, contract: %s\n", cfg.Node.Server, cfg.Node.Contract)
 
-	pool, err := sql.Open("mysql", cfg.DSN())
+	pool, err := sql.Open("mysql", cfg.Engine.Database.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}

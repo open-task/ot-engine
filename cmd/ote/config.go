@@ -13,40 +13,14 @@ import (
 	"github.com/open-task/ot-engine/node"
 )
 
-type HTTPConfig struct {
-	Port string `json:port`
-}
-
-type DatabaseConfig struct {
-	Host     string `json:"host"`
-	Port     string `json:port`
-	User     string `json:user`
-	Password string `json:"password"`
-	Database string `json:"database"`
-}
-
 type Config struct {
-	Database DatabaseConfig `json:"database"`
-	Http     HTTPConfig     `json:http`
-	Node     node.Config    `json:"node"`
-}
-
-func (c Config) DSN() (dsn string) {
-	dsn = c.Database.User + ":" + c.Database.Password + "@"
-	if c.Database.Host != "" {
-		dsn += "tcp(" + c.Database.Host
-		if c.Database.Port != "" {
-			dsn += ":" + c.Database.Port
-		}
-		dsn += ")"
-	}
-
-	dsn += "/" + c.Database.Database
-	return dsn
+	Engine  node.Engine  `json:"engine"`
+	Node    node.Config  `json:"node"`
+	Backend node.Backend `json:"backend"`
 }
 
 func (c Config) Address() string {
-	return ":" + c.Http.Port
+	return ":" + c.Engine.Http.Port
 }
 
 func DefaultConfig() (config Config) {
@@ -89,17 +63,20 @@ func LoadConfig(ctx *cli.Context) Config {
 
 func makeConfigNode(ctx *cli.Context) *node.Node {
 	cfg := LoadConfig(ctx)
-	stack, err := node.New(&cfg.Node)
-	if err != nil {
-		log.Fatalf("Failed to create the stack: %v", err)
+	stack := &node.Node{
+		EthConfig:     &cfg.Node,
+		EngineConfig:  &cfg.Engine,
+		BackendConfig: &cfg.Backend,
 	}
-
 	return stack
 }
 
 func makeConfigEngine(ctx *cli.Context) *engine.OtEngineServer {
 	cfg := LoadConfig(ctx)
-	eCfg := engine.Config{Address: cfg.Address(), DSN: cfg.DSN()}
+	eCfg := engine.Config{
+		Address: cfg.Address(),
+		DSN:     cfg.Engine.Database.DSN(),
+	}
 	stack, err := engine.New(&eCfg)
 	if err != nil {
 		log.Fatalf("Failed to create the stack: %v", err)

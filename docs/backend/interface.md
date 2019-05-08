@@ -45,6 +45,9 @@ curl -s -X GET '47.92.64.129/backend/v1/user/u1/skill'| jq .
 ### 返回参数
 
 ### 示例
+```
+curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.129/backend/v1/user/u1/skill/s2' | jq .
+```
 
 ## PATCH /backend/v1/user/:user/skill/:skill 更新技能
 
