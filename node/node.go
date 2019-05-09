@@ -134,6 +134,9 @@ func (n *Node) Setup() {
 			user.PATCH("/skill/:skill", func(c *gin.Context) {
 				engine.UpdateUserSkill(c, n.BackendDB)
 			})
+			user.POST("/skill/:skill", func(c *gin.Context) {
+				engine.UpdateUserSkill(c, n.BackendDB)
+			})
 			user.DELETE("/skill/:skill", func(c *gin.Context) {
 				engine.DeleteUserSkill(c, n.BackendDB)
 			})

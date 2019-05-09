@@ -6,9 +6,10 @@ URL|请求方法|含义|参数
 |:---|:---:|---|---|
 /backend/v1/user/:user/skill | GET  | 获得某用户的全部技能列表 |`user`: 用户(地址)|
 /backend/v1/user/:user/skill | POST | 添加技能               |`user`: 用户(地址)<br>`skill`: 技能
-/backend/v1/user/:user/skill/:skill|GET|获得技能信息|`user`: 用户(地址)<br>`skill`: 技能
-/backend/v1/user/:user/skill/:skill|PUT|更新技能|`user`: 用户(地址)<br>`skill`: 技能
-/backend/v1/user/:user/skill/:skill|PATCH|更新技能|`user`: 用户(地址)<br>`skill`: 技能
+/backend/v1/user/:user/skill/:skill|GET   |获得技能信息|`user`: 用户(地址)<br>`skill`: 技能
+/backend/v1/user/:user/skill/:skill|PUT   |更新技能|`user`: 用户(地址)<br>`skill`: 技能
+/backend/v1/user/:user/skill/:skill|PATCH |更新技能|`user`: 用户(地址)<br>`skill`: 技能
+/backend/v1/user/:user/skill/:skill|POST  |更新技能|`user`: 用户(地址)<br>`skill`: 技能
 /backend/v1/user/:user/skill/:skill|DELETE|删除技能|`user`: 用户(地址)<br>`skill`: 技能
 /backend/v1/skill/top|GET|获得全系统的技能列表|`limit`: 结果条数
 
@@ -57,6 +58,8 @@ curl -s -X GET '47.92.64.129/backend/v1/user/u1/skill'| jq .
 请求
 ```bash
 curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
+
+curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.129/backend/v1/user/u1/skill' | jq .
 ```
 返回
 ```json
@@ -78,6 +81,8 @@ curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:
 ### 示例
 ```bash
 curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/1 | jq .
+
+curl -s -X GET http://47.92.64.129/backend/v1/user/u1/skill/1 | jq .
 ```
 
 ```json
@@ -108,7 +113,33 @@ curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.12
 ### 返回参数
 
 ### 示例
+请求
+```bash
+curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
 
+curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.129/backend/v1/user/u1/skill/s2' | jq .
+```
+返回
+```json
+
+```
+## POST /backend/v1/user/:user/skill/:skill 更新技能
+
+### 请求参数
+
+### 返回参数
+
+### 示例
+请求
+```bash
+curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
+
+curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.129/backend/v1/user/u1/skill/s2' | jq .
+```
+返回
+```json
+
+```
 ## DELETE /backend/v1/user/:user/skill/:skill 删除技能
 
 ### 请求参数
@@ -116,7 +147,19 @@ curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.12
 ### 返回参数
 
 ### 示例
+请求
+```bash
+curl -s -X DELETE http://127.0.0.1:8080/backend/v1/user/u1/skill/s1 | jq .
 
+curl -s -X DELETE http://47.92.64.129/backend/v1/user/u1/skill/s1 | jq .
+```
+
+```json
+{
+  "Id": 0,
+  "user": "u1"
+}
+```
 ## GET /backend/v1/skill/top 获得全系统的技能列表
 
 ### 请求参数

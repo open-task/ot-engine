@@ -2,6 +2,7 @@ package engine
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -170,7 +171,11 @@ WHERE id=?
 // curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
 func UpdateUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	id := c.Param("skill")
+	id, err := checkId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
 	skill := c.PostForm("skill")
 	status := c.PostForm("status")
 	submitNum := c.PostForm("submit_num")
@@ -305,4 +310,16 @@ LIMIT ?;
 		return
 	}
 	c.JSON(http.StatusOK, skills)
+}
+
+func checkId(c *gin.Context) (int64, error) {
+	idStr := c.Param("skill")
+	if idStr == "" {
+		return 0, errors.New("empty ID.")
+	}
+	id, err := strconv.ParseInt(idStr, 0, 64)
+	if err != nil {
+		return 0, errors.New("Invalid ID.")
+	}
+	return id, nil
 }
