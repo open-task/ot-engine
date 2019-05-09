@@ -5,14 +5,19 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type Skill struct {
 	Id         int64  `json:id`
-	User       string `json:"user"`
-	Skill      string `json:"skill"`
-	Status     int    `json:"status"`
-	UpdateTime string `json:"update_time"`
+	User       string `json:"user,omitempty"`
+	Skill      string `json:"skill,omitempty"`
+	Status     int    `json:"status,omitempty"`
+	Submit     int    `json:"submit,omitempty"`
+	Confirm    int    `json:"confirm,omitempty"`
+	Filter     int    `json:"filter,omitempty"`
+	UpdateTime string `json:"update_time,omitempty"`
 }
 
 // curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
@@ -128,34 +133,176 @@ WHERE id=?
 // curl -s -X DELETE http://127.0.0.1:8080/backend/v1/user/u1/skill/s1 | jq .
 func DeleteUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	skill := c.Param("skill")
-	log.Printf("user: %s, skill: %s\n", user, skill)
-	s1 := Skill{
-		User:  user,
-		Skill: skill,
+	skillId := c.Param("skill")
+	log.Printf("user: %s, skillId: %s\n", user, skillId)
+
+	stmtIns, err := db.Prepare(`
+DELETE
+FROM skill
+WHERE id=?
+  AND addr=?;
+`)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
 	}
-	c.JSON(http.StatusOK, s1)
+	defer stmtIns.Close()
+
+	res, err := stmtIns.Exec(skillId, user)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	c.JSON(http.StatusOK, Skill{
+		Id:   id,
+		User: user,
+	})
 }
 
 // curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
 func UpdateUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	skill := c.Param("skill")
+	id := c.Param("skill")
+	skill := c.PostForm("skill")
+	status := c.PostForm("status")
+	submitNum := c.PostForm("submit_num")
+	confirmNum := c.PostForm("confirm_num")
+	filter := c.PostForm("filter")
 	log.Printf("user: %s, skill: %s\n", user, skill)
 
-	s1 := Skill{
-		User:  user,
-		Skill: skill,
+	query := "UPDATE skill SET ";
+	var s = Skill{
+		User: user,
 	}
-	c.JSON(http.StatusOK, s1)
+	var values []interface{}
+
+	if skill != "" {
+		query += "skill = ?, "
+		values = append(values, skill)
+		s.Skill = skill
+	}
+
+	if status != "" {
+		i, err := strconv.Atoi(status)
+		if err != nil {
+			query += "status = ?, "
+			values = append(values, i)
+			s.Status = i
+		}
+	}
+
+	if submitNum != "" {
+		i, err := strconv.Atoi(submitNum)
+		if err != nil {
+			query += "submit_num = ?, "
+			values = append(values, i)
+			s.Submit = i
+		}
+	}
+
+	if confirmNum != "" {
+		i, err := strconv.Atoi(confirmNum)
+		if err != nil {
+			query += "confirm_num = ?, "
+			values = append(values, i)
+			s.Confirm = i
+		}
+	}
+
+	if filter != "" {
+		i, err := strconv.Atoi(filter)
+		if err != nil {
+			query += "filter = ?, "
+			values = append(values, filter)
+			s.Filter = i
+		}
+	}
+
+	if len(values) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "no valid data"})
+		return
+	}
+	query = strings.Trim(query, ", ")
+	query += " WHERE id = ?"
+	values = append(values, id)
+	log.Printf("query = \"%s\", values = %v", query, values)
+
+	result, err := db.Exec(query, values...)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	if n <= 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "no this data."})
+		return
+	}
+	id2, err := result.LastInsertId()
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	s.Id = id2
+
+	c.JSON(http.StatusOK, s)
 }
 
-// curl -X GET http://127.0.0.1:8080/backend/v1/skills/top?limit=30
+// curl -s -X GET http://127.0.0.1:8080/backend/v1/skill/top?limit=30 | jq .
 func TopSkills(c *gin.Context, db *sql.DB) {
 	limit := c.Query("limit")
 	log.Printf("limit = %s\n", limit)
 
-	c.JSON(http.StatusOK, gin.H{
-		"msg": "It works.",
-	})
+	query := `
+SELECT id,
+       addr,
+       skill,
+       status,
+       submit_num,
+       confirm_num,
+       filter,
+       updatetime
+FROM skill
+ORDER BY confirm_num DESC
+LIMIT ?;
+`
+	rows, err := db.Query(query, limit)
+	defer rows.Close()
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	var skills []Skill
+
+	for rows.Next() {
+		var s Skill
+		err = rows.Scan(&s.Id, &s.User, &s.Skill, &s.Status, &s.Submit, &s.Confirm, &s.Filter, &s.UpdateTime)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		skills = append(skills, s)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+	c.JSON(http.StatusOK, skills)
 }

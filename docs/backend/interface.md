@@ -125,7 +125,19 @@ curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '47.92.64.12
 
 ### 示例
 
+请求
 ```bash
 curl -s -X GET '47.92.64.129/backend/v1/skill/top'| jq .
 curl -s -X GET '47.92.64.129/backend/v1/skill/top?limit=30'| jq .
+```
+返回
+```json
+[
+  {
+    "Id": 1,
+    "user": "u1",
+    "skill": "\"C  \"",
+    "update_time": "2019-05-09 11:31:53"
+  }
+]
 ```
