@@ -273,16 +273,12 @@ func TopSkills(c *gin.Context, db *sql.DB) {
 	log.Printf("limit = %s\n", limit)
 
 	query := `
-SELECT id,
-       addr,
-       skill,
-       status,
-       submit_num,
-       confirm_num,
-       filter,
-       updatetime
+SELECT skill,
+       count(skill) AS providers
 FROM skill
-ORDER BY confirm_num DESC
+WHERE filter=0
+GROUP BY skill
+ORDER BY providers DESC
 LIMIT ?;
 `
 	rows, err := db.Query(query, limit)
@@ -292,16 +288,20 @@ LIMIT ?;
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
 		return
 	}
-	var skills []Skill
+	type Stat struct {
+		Skill     string `json:"skill"`
+		Providers int    `json:"providers"`
+	}
+	var stats []Stat
 
 	for rows.Next() {
-		var s Skill
-		err = rows.Scan(&s.Id, &s.User, &s.Skill, &s.Status, &s.Submit, &s.Confirm, &s.Filter, &s.UpdateTime)
+		var s Stat
+		err = rows.Scan(&s.Skill, &s.Providers)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		skills = append(skills, s)
+		stats = append(stats, s)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -309,7 +309,7 @@ LIMIT ?;
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
 		return
 	}
-	c.JSON(http.StatusOK, skills)
+	c.JSON(http.StatusOK, stats)
 }
 
 func checkId(c *gin.Context) (int64, error) {

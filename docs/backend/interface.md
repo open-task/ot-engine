@@ -177,10 +177,12 @@ curl -s -X GET '47.92.64.129/backend/v1/skill/top?limit=30'| jq .
 ```json
 [
   {
-    "Id": 1,
-    "user": "u1",
-    "skill": "\"C  \"",
-    "update_time": "2019-05-09 11:31:53"
+    "skill": "s1",
+    "providers": 3
+  },
+  {
+    "skill": "s3",
+    "providers": 1
   }
 ]
 ```
