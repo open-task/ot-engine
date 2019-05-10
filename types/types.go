@@ -2,6 +2,7 @@ package types
 
 import (
 	"math/big"
+	"time"
 )
 
 type PublishEvent struct {
@@ -34,8 +35,8 @@ const (
 	Solved    = "Solved"
 
 	Unprocessed = "Unprocessed"
-	Accepted = "Accepted"
-	Rejected = "Rejected"
+	Accepted    = "Accepted"
+	Rejected    = "Rejected"
 )
 
 type SolveEvent struct {
@@ -82,4 +83,15 @@ type Solution struct {
 type Mission struct {
 	PublishEvent
 	Solutions []Solution `json:"solutions"`
+}
+
+type Statement struct {
+	Id         int64      `json:"id"                    gorm:"AUTO_INCREMENT;PRIMARY_KEY"`
+	User       User       `json:"user,omitempty"        gorm:"foreignkey:UserId;association_foreignkey:Id"`
+	Skill      Skill      `json:"skill,omitempty"       gorm:"foreignkey:SkillId;association_foreignkey:Id"`
+	Status     int        `json:"status,omitempty"`
+	Submit     int        `json:"submit,omitempty"`
+	Confirm    int        `json:"confirm,omitempty"`
+	Filter     int        `json:"filter,omitempty"`
+	UpdateTime *time.Time `json:"update_time,omitempty" gorm:"column:updatetime;type:DATETIME"`
 }

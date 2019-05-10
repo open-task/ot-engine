@@ -5,14 +5,15 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/kanocz/goginjsonrpc"
+	"github.com/open-task/ot-engine/engine"
 	"github.com/open-task/ot-engine/jsonrpc"
 	"log"
 	"math/big"
 	"net/http"
 	"time"
-
-	"github.com/open-task/ot-engine/engine"
 )
 
 type Config struct {
@@ -46,7 +47,7 @@ func (db DatabaseConfig) DSN() (dsn string) {
 		dsn += ")"
 	}
 
-	dsn += "/" + db.Database
+	dsn += "/" + db.Database + "?charset=utf8mb4&parseTime=True&loc=Local"
 	return dsn
 }
 
@@ -72,7 +73,7 @@ type Node struct {
 	EngineDB *sql.DB
 	RPC      *jsonrpc.EngineRPC
 
-	BackendDB *sql.DB
+	BackendDB *gorm.DB
 }
 
 var DefaultConfig = Config{
@@ -92,12 +93,14 @@ func (n *Node) Setup() {
 	db.SetMaxOpenConns(10)
 	n.EngineDB = db
 
-	db, err = sql.Open("mysql", n.BackendConfig.Database.DSN())
+	gormDB, err := gorm.Open("mysql", n.BackendConfig.Database.DSN())
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.SetMaxOpenConns(10)
-	n.BackendDB = db
+	gormDB.DB().SetMaxIdleConns(5)
+	gormDB.DB().SetMaxOpenConns(10)
+	gormDB.DB().SetConnMaxLifetime(time.Hour)
+	n.BackendDB = gormDB
 
 	n.GinServer = gin.Default()
 	n.RPC = &jsonrpc.EngineRPC{Version: "0.2.0", DB: n.EngineDB}
@@ -125,7 +128,7 @@ func (n *Node) Setup() {
 			user.POST("/skill", func(c *gin.Context) {
 				engine.AddUserSkill(c, n.BackendDB)
 			})
-			user.GET("/skill/:skill", func(c *gin.Context) {
+			user.GET("/skill/:id", func(c *gin.Context) {
 				engine.FetchUserSkill(c, n.BackendDB)
 			})
 			user.PUT("/skill/:skill", func(c *gin.Context) {
@@ -137,14 +140,17 @@ func (n *Node) Setup() {
 			user.POST("/skill/:skill", func(c *gin.Context) {
 				engine.UpdateUserSkill(c, n.BackendDB)
 			})
-			user.DELETE("/skill/:skill", func(c *gin.Context) {
+			user.DELETE("/skill/:id", func(c *gin.Context) {
 				engine.DeleteUserSkill(c, n.BackendDB)
 			})
 		}
+		backend.GET("/skill", func(c *gin.Context) {
+			engine.TopSkills(c, n.BackendDB)
+		})
 		skills := backend.Group("/skill")
 		{
-			skills.GET("/top", func(c *gin.Context) {
-				engine.TopSkills(c, n.BackendDB)
+			skills.GET("/:id/user", func(c *gin.Context) {
+				engine.FetchSkillProviders(c, n.BackendDB)
 			})
 		}
 	}
@@ -159,7 +165,7 @@ func (n *Node) healthz(c *gin.Context) {
 		c.JSON(http.StatusFailedDependency, gin.H{"message": fmt.Sprintf("engine db down: %v", err)})
 		return
 	}
-	err = n.BackendDB.PingContext(ctx)
+	err = n.BackendDB.DB().PingContext(ctx)
 	if err != nil {
 		c.JSON(http.StatusFailedDependency, gin.H{"message": fmt.Sprintf("backend db down: %v", err)})
 		return
