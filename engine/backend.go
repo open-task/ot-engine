@@ -108,11 +108,16 @@ WHERE filter=0
 // curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/1 | jq .
 func FetchUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	skill := c.Param("skill")
-	log.Printf("user: %s, skill: %s\n", user, skill)
+	idStr := c.Param("skill")
+	id, err := checkId(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	log.Printf("user: %s, skill: %s\n", user, id)
 
 	var s Skill
-	err := db.QueryRow(`
+	err = db.QueryRow(`
 SELECT id,
        addr,
        skill,
@@ -121,7 +126,7 @@ SELECT id,
 FROM skill
 WHERE id=?
   AND addr = ?
-`, skill, user).Scan(&s.Id, &s.User, &s.Skill, &s.Status, &s.UpdateTime)
+`, id, user).Scan(&s.Id, &s.User, &s.Skill, &s.Status, &s.UpdateTime)
 	if err != nil {
 		// TODO: empty set
 		log.Println(err)
@@ -134,8 +139,13 @@ WHERE id=?
 // curl -s -X DELETE http://127.0.0.1:8080/backend/v1/user/u1/skill/s1 | jq .
 func DeleteUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	skillId := c.Param("skill")
-	log.Printf("user: %s, skillId: %s\n", user, skillId)
+	idStr := c.Param("skill")
+	id, err := checkId(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	log.Printf("user: %s, skillId: %s\n", user, idStr)
 
 	stmtIns, err := db.Prepare(`
 DELETE
@@ -150,20 +160,20 @@ WHERE id=?
 	}
 	defer stmtIns.Close()
 
-	res, err := stmtIns.Exec(skillId, user)
+	res, err := stmtIns.Exec(id, user)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
 		return
 	}
-	id, err := res.LastInsertId()
+	id2, err := res.LastInsertId()
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
 		return
 	}
 	c.JSON(http.StatusOK, Skill{
-		Id:   id,
+		Id:   id2,
 		User: user,
 	})
 }
@@ -171,7 +181,8 @@ WHERE id=?
 // curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
 func UpdateUserSkill(c *gin.Context, db *sql.DB) {
 	user := c.Param("user")
-	id, err := checkId(c)
+	idStr := c.Param("skill")
+	id, err := checkId(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		return
@@ -312,8 +323,7 @@ LIMIT ?;
 	c.JSON(http.StatusOK, stats)
 }
 
-func checkId(c *gin.Context) (int64, error) {
-	idStr := c.Param("skill")
+func checkId(idStr string) (int64, error) {
 	if idStr == "" {
 		return 0, errors.New("empty ID.")
 	}
