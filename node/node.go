@@ -149,6 +149,15 @@ func (n *Node) Setup() {
 		})
 		skills := backend.Group("/skill")
 		{
+			skills.POST("/update_skill", func(c *gin.Context) {
+				engine.UpdateSkills(c, n.BackendDB)
+			})
+			skills.POST("/get_skill", func(c *gin.Context) {
+				engine.GetSkills(c, n.BackendDB)
+			})
+			skills.POST("/del_skill", func(c *gin.Context) {
+				engine.DeleteSkills(c, n.BackendDB)
+			})
 			skills.GET("/:id/user", func(c *gin.Context) {
 				engine.FetchSkillProviders(c, n.BackendDB)
 			})

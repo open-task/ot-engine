@@ -260,3 +260,15 @@ func checkId(idStr string) (int64, error) {
 	}
 	return id, nil
 }
+
+func UpdateSkills(c *gin.Context, db *gorm.DB) {
+
+}
+
+func GetSkills(c *gin.Context, db *gorm.DB) {
+
+}
+
+func DeleteSkills(c *gin.Context, db *gorm.DB) {
+
+}
