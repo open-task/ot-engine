@@ -8,19 +8,21 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
 func AddUserSkill(c *gin.Context, db *gorm.DB) {
 	address := c.Param("user")
 	skill_ := c.PostForm("skill")
-	log.Printf("user: %s, skill: %s\n", address, skill_)
+	email := c.PostForm("email")
+	log.Printf("user: %s, email:%s, skill: %s\n", address, email, skill_)
 
 	// TODO: check the input format
 
 	skill := types.Skill{Skill: skill_}
 	db.FirstOrCreate(&skill, skill)
-	user := types.User{Address: address}
+	user := types.User{Address: address, Email: email}
 	db.FirstOrCreate(&user, user)
 	user.Skills = append(user.Skills, skill)
 	db.Save(&user)
@@ -85,104 +87,91 @@ func DeleteUserSkill(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, skill)
 }
 
-// curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
+// curl -s -X PUT -H 'application/x-www-form-urlencoded' -d 'email=user1@bountinet.com&skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill/s2' | jq .
 func UpdateUserSkill(c *gin.Context, db *gorm.DB) {
-	//user := c.Param("user")
-	//idStr := c.Param("skill")
-	//id, err := checkId(idStr)
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-	//	return
-	//}
-	//skill := c.PostForm("skill")
-	//status := c.PostForm("status")
-	//submitNum := c.PostForm("submit_num")
-	//confirmNum := c.PostForm("confirm_num")
-	//filter := c.PostForm("filter")
-	//log.Printf("user: %s, skill: %s\n", user, skill)
-	//
-	//query := "UPDATE skill SET ";
-	//var s = Skill{
-	//	User: user,
-	//}
-	//var values []interface{}
-	//
-	//if skill != "" {
-	//	query += "skill = ?, "
-	//	values = append(values, skill)
-	//	s.Skill = skill
-	//}
-	//
-	//if status != "" {
-	//	i, err := strconv.Atoi(status)
-	//	if err != nil {
-	//		query += "status = ?, "
-	//		values = append(values, i)
-	//		s.Status = i
-	//	}
-	//}
-	//
-	//if submitNum != "" {
-	//	i, err := strconv.Atoi(submitNum)
-	//	if err != nil {
-	//		query += "submit_num = ?, "
-	//		values = append(values, i)
-	//		s.Submit = i
-	//	}
-	//}
-	//
-	//if confirmNum != "" {
-	//	i, err := strconv.Atoi(confirmNum)
-	//	if err != nil {
-	//		query += "confirm_num = ?, "
-	//		values = append(values, i)
-	//		s.Confirm = i
-	//	}
-	//}
-	//
-	//if filter != "" {
-	//	i, err := strconv.Atoi(filter)
-	//	if err != nil {
-	//		query += "filter = ?, "
-	//		values = append(values, filter)
-	//		s.Filter = i
-	//	}
-	//}
-	//
-	//if len(values) == 0 {
-	//	c.JSON(http.StatusBadRequest, gin.H{"msg": "no valid data"})
-	//	return
-	//}
-	//query = strings.Trim(query, ", ")
-	//query += " WHERE id = ?"
-	//values = append(values, id)
-	//log.Printf("query = \"%s\", values = %v", query, values)
-	//
-	//result, err := db.Exec(query, values...)
-	//if err != nil {
-	//	log.Println(err)
-	//	c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
-	//	return
-	//}
-	//n, err := result.RowsAffected()
-	//if err != nil {
-	//	log.Println(err)
-	//	c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
-	//	return
-	//}
-	//if n <= 1 {
-	//	c.JSON(http.StatusBadRequest, gin.H{"msg": "no this data."})
-	//	return
-	//}
-	//id2, err := result.LastInsertId()
-	//if err != nil {
-	//	log.Println(err)
-	//	c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
-	//	return
-	//}
-	//s.Id = id2
-	//
-	//c.JSON(http.StatusOK, s)
+	address := c.Param("user")
+	idStr := c.Param("skill")
+	id, err := checkId(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	email := c.PostForm("email")
+	user := types.User{Address: address}
+	if email != "" {
+		user.Email = email
+		// update user if email changes
+		db.Model(&user).Update(user)
+	}
+	// can't change skill desc ?
+	skill_ := c.PostForm("skill")
+	var skill = types.Skill{Id: id}
+	if skill_ != "" {
+		skill.Skill = skill_
+		// update skill if desc changes
+		db.Model(&skill).Update(skill)
+		log.Printf("update skill, id: %s, new skill is '%s'\n", id, skill_)
+	}
+	status := c.PostForm("status")
+	submitNum := c.PostForm("submit_num")
+	confirmNum := c.PostForm("confirm_num")
+	filter := c.PostForm("filter")
+
+	query := "UPDATE skill SET ";
+	var values []interface{}
+	var state types.Statement
+	if status != "" {
+		i, err := strconv.Atoi(status)
+		if err != nil {
+			query += "status = ?, "
+			values = append(values, i)
+			state.Status = i
+		}
+	}
+
+	if submitNum != "" {
+		i, err := strconv.Atoi(submitNum)
+		if err != nil {
+			query += "submit_num = ?, "
+			values = append(values, i)
+			state.Submit = i
+		}
+	}
+
+	if confirmNum != "" {
+		i, err := strconv.Atoi(confirmNum)
+		if err != nil {
+			query += "confirm_num = ?, "
+			values = append(values, i)
+			state.Confirm = i
+		}
+	}
+
+	if filter != "" {
+		i, err := strconv.Atoi(filter)
+		if err != nil {
+			query += "filter = ?, "
+			values = append(values, filter)
+			state.Filter = i
+		}
+	}
+
+	if len(values) == 0 {
+		c.JSON(http.StatusOK, skill)
+		return
+	}
+	query = strings.Trim(query, ", ")
+	query += " WHERE user_id = ? AND skill_id = ?"
+	values = append(values, user.Id, skill.Id)
+	log.Printf("query = \"%s\", values = %v", query, values)
+
+	if err := db.Exec(query, values...).Error; err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "db error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, skill)
 }
 
 // curl -s -X GET http://127.0.0.1:8080/backend/v1/skill/top?limit=30 | jq .
