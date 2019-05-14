@@ -90,9 +90,9 @@ curl -s -X GET '127.0.0.1:8080/backend/v1/user/0x1c635f4756ED1dD9Ed615dD0A0Ff10E
 
 ```bash
 curl -s -X POST \
-  http://127.0.0.1:8080/backend/v1/user/9/info \
+  http://127.0.0.1:8080/backend/v1/user/0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b/info \
   -H 'content-type: application/x-www-form-urlencoded' \
-  -d 'email=user111@bountinet.com&address=0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b' | jq .
+  -d 'email=user111@bountinet.com' | jq .
 
 curl -s -X POST \
   http://127.0.0.1:8080/backend/v1/user/9/info \
@@ -160,7 +160,7 @@ curl -s -X GET 'http://127.0.0.1:8080/backend/v1/user/9/skill'| jq .
 请求
 ```bash
  curl -s -X POST \
-  'http://127.0.0.1:8080/backend/v1/user/7/skill' \
+  'http://127.0.0.1:8080/backend/v1/user/0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b/skill' \
   -H 'content-type: application/json' \
   -d '{"tag": "区块链"}' | jq .
   

@@ -297,7 +297,7 @@ func FetchUserInfo(c *gin.Context, db *gorm.DB) {
 func UpdateUserInfo(c *gin.Context, db *gorm.DB) {
 	address := c.Param("address")
 	user := types.User{Address: address}
-	if err := db.First(&user, user).Error; err != nil {
+	if err := db.FirstOrCreate(&user, user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
