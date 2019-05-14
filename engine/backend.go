@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
+// curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'email=u1@a.com&skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
 func AddUserSkill(c *gin.Context, db *gorm.DB) {
 	address := c.Param("user")
 	skill_ := c.PostForm("skill")
@@ -249,6 +249,59 @@ func checkId(idStr string) (int64, error) {
 	}
 	return id, nil
 }
+
+// curl -s -X GET '127.0.0.1:8080/backend/v1/user/111/info' | jq .
+func FetchUserInfo(c *gin.Context, db *gorm.DB) {
+	userIdStr := c.Param("user_id")
+	userId, err := checkId(userIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var user types.User
+	user.Id = userId
+	db.First(&user,user)
+	db.Model(&user).Association("Skills").Find(&user.Skills)
+	c.JSON(http.StatusOK, user)
+}
+
+//curl -v -X POST \
+//  http://127.0.0.1:8080/backend/v1/user/111/info \
+//  -H 'content-type: application/x-www-form-urlencoded' \
+//  -d 'email=user111@bountinet.com'
+//curl -v -X POST \
+//  http://127.0.0.1:8080/backend/v1/user/111/info \
+//  -H 'content-type: application/json' \
+//  -d '{ "email": "user111@bountinet.com" }'
+func UpdateUserInfo(c *gin.Context, db *gorm.DB) {
+	var user types.User
+	if err := c.ShouldBind(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Printf("Binded user: %v\n", user)
+	userIdStr := c.Param("user_id")
+	userId, err := checkId(userIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	user.Id = userId
+	db.Model(&user).Update(user)
+	c.JSON(http.StatusOK, user)
+}
+
+func FetchUserMissions(c *gin.Context, db *gorm.DB) {
+
+}
+
+func FetchSkills(c *gin.Context, db *gorm.DB) {
+
+}
+
+//func (c *gin.Context, db *gorm.DB) {
+//
+//}
 
 func UpdateSkills(c *gin.Context, db *gorm.DB) {
 

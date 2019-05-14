@@ -120,7 +120,7 @@ func (n *Node) Setup() {
 
 	backend := n.GinServer.Group("/backend/v1")
 	{
-		user := backend.Group("/user/:user")
+		user := backend.Group("/user/:user_id")
 		{
 			user.GET("/skill", func(c *gin.Context) {
 				engine.FetchUserSkills(c, n.BackendDB)
@@ -143,22 +143,47 @@ func (n *Node) Setup() {
 			user.DELETE("/skill/:id", func(c *gin.Context) {
 				engine.DeleteUserSkill(c, n.BackendDB)
 			})
+
+			user.GET("/info", func(c *gin.Context) {
+				engine.FetchUserInfo(c, n.BackendDB)
+			})
+			user.POST("/info", func(c *gin.Context) {
+				engine.UpdateUserInfo(c, n.BackendDB)
+			})
+			//info := user.Group("/info")
+			//{
+			//	//info.GET("/info", func(c *gin.Context) {
+			//	//	engine.FetchUserInfo(c, n.BackendDB)
+			//	//})
+			//}
+			user.GET("/mission", func(c *gin.Context) {
+				engine.FetchUserMissions(c, n.BackendDB)
+			})
+			//mission := user.Group("/mission")
+			//{
+			//	//info.GET("/info", func(c *gin.Context) {
+			//	//	engine.FetchUserInfo(c, n.BackendDB)
+			//	//})
+			//}
 		}
 		backend.GET("/skill", func(c *gin.Context) {
-			engine.TopSkills(c, n.BackendDB)
+			engine.FetchSkills(c, n.BackendDB)
 		})
-		skills := backend.Group("/skill")
+		skill := backend.Group("/skill")
 		{
-			skills.POST("/update_skill", func(c *gin.Context) {
+			//skill.GET("/top", func(c *gin.Context) {
+			//	engine.TopSkills(c, n.BackendDB)
+			//})
+			skill.POST("/update_skill", func(c *gin.Context) {
 				engine.UpdateSkills(c, n.BackendDB)
 			})
-			skills.POST("/get_skill", func(c *gin.Context) {
+			skill.POST("/get_skill", func(c *gin.Context) {
 				engine.GetSkills(c, n.BackendDB)
 			})
-			skills.POST("/del_skill", func(c *gin.Context) {
+			skill.POST("/del_skill", func(c *gin.Context) {
 				engine.DeleteSkills(c, n.BackendDB)
 			})
-			skills.GET("/:id/user", func(c *gin.Context) {
+			skill.GET("/:id/user", func(c *gin.Context) {
 				engine.FetchSkillProviders(c, n.BackendDB)
 			})
 		}
