@@ -260,7 +260,7 @@ func FetchUserInfo(c *gin.Context, db *gorm.DB) {
 	}
 	var user types.User
 	user.Id = userId
-	db.First(&user,user)
+	db.First(&user, user)
 	db.Model(&user).Association("Skills").Find(&user.Skills)
 	c.JSON(http.StatusOK, user)
 }
@@ -274,20 +274,23 @@ func FetchUserInfo(c *gin.Context, db *gorm.DB) {
 //  -H 'content-type: application/json' \
 //  -d '{ "email": "user111@bountinet.com" }'
 func UpdateUserInfo(c *gin.Context, db *gorm.DB) {
-	var user types.User
-	if err := c.ShouldBind(&user); err != nil {
+	var user2 types.User
+	if err := c.ShouldBind(&user2); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Printf("Binded user: %v\n", user)
+	// TODO: may config in binding?
+	user2.UpdateTime = nil
+	log.Printf("Binded user: %v\n", user2)
 	userIdStr := c.Param("user_id")
 	userId, err := checkId(userIdStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user.Id = userId
-	db.Model(&user).Update(user)
+	user := types.User{Id: userId}
+	db.First(&user, user)
+	db.Model(&user).Update(user2)
 	c.JSON(http.StatusOK, user)
 }
 
