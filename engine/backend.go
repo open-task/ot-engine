@@ -13,29 +13,34 @@ import (
 
 // curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'email=u1@a.com&skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
 func AddUserSkill(c *gin.Context, db *gorm.DB) {
-	address := c.Param("user")
-	skill_ := c.PostForm("skill")
-	email := c.PostForm("email")
-	log.Printf("user: %s, email:%s, skill: %s\n", address, email, skill_)
+	address := c.Param("address")
+	user := types.User{Address: address}
+	if err := db.First(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var skill types.Skill
+	if err := c.ShouldBind(&skill); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else {
+		skill.UpdateTime = nil //clear fake update time
+	}
 
-	// TODO: check the input format
-
-	skill := types.Skill{Skill: skill_}
 	db.FirstOrCreate(&skill, skill)
-	user := types.User{Address: address, Email: email}
-	db.FirstOrCreate(&user, user)
 	user.Skills = append(user.Skills, skill)
-	db.Save(&user)
+	db.Save(&user) // for statements
 	c.JSON(http.StatusOK, skill)
 }
 
 // curl -s -X GET '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
 func FetchUserSkills(c *gin.Context, db *gorm.DB) {
-	address := c.Param("user")
-	log.Printf("user: %s\n", address)
-
+	address := c.Param("address")
 	user := types.User{Address: address}
-	db.FirstOrCreate(&user, user)
+	if err := db.First(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	var skills []types.Skill
 	db.Model(&user).Association("Skills").Find(&skills)
@@ -44,7 +49,13 @@ func FetchUserSkills(c *gin.Context, db *gorm.DB) {
 
 // curl -s -X GET http://127.0.0.1:8080/backend/v1/user/u1/skill/1 | jq .
 func FetchUserSkill(c *gin.Context, db *gorm.DB) {
-	address := c.Param("user")
+	address := c.Param("address")
+	user := types.User{Address: address}
+	if err := db.First(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := checkId(idStr)
 	if err != nil {
@@ -54,8 +65,6 @@ func FetchUserSkill(c *gin.Context, db *gorm.DB) {
 	skill := types.Skill{Id: id}
 	db.First(&skill, skill) // don't create
 
-	user := types.User{Address: address}
-	db.First(&user, user) // don't create
 	var skills []types.Skill
 	db.Model(&user).Association("Skills").Find(&skills)
 	// make sure user has this skill
@@ -70,7 +79,13 @@ func FetchUserSkill(c *gin.Context, db *gorm.DB) {
 
 // curl -s -X DELETE http://127.0.0.1:8080/backend/v1/user/u1/skill/1 | jq .
 func DeleteUserSkill(c *gin.Context, db *gorm.DB) {
-	address := c.Param("user")
+	address := c.Param("address")
+	user := types.User{Address: address}
+	if err := db.First(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := checkId(idStr)
 	if err != nil {
@@ -80,8 +95,6 @@ func DeleteUserSkill(c *gin.Context, db *gorm.DB) {
 	log.Printf("user: %s, skillId: %s\n", address, idStr)
 
 	skill := types.Skill{Id: id}
-	user := types.User{Address: address}
-	db.First(&user, user)                                // don't create
 	db.Model(&user).Association("Skills").Delete(&skill) //don't check for exist
 	// always ok
 	c.JSON(http.StatusOK, skill)
@@ -104,13 +117,13 @@ func UpdateUserSkill(c *gin.Context, db *gorm.DB) {
 		db.Model(&user).Update(user)
 	}
 	// can't change skill desc ?
-	skill_ := c.PostForm("skill")
+	tag := c.PostForm("skill")
 	var skill = types.Skill{Id: id}
-	if skill_ != "" {
-		skill.Skill = skill_
+	if tag != "" {
+		skill.Tag = tag
 		// update skill if desc changes
 		db.Model(&skill).Update(skill)
-		log.Printf("update skill, id: %s, new skill is '%s'\n", id, skill_)
+		log.Printf("update skill, id: %s, new skill is '%s'\n", id, tag)
 	}
 	status := c.PostForm("status")
 	submitNum := c.PostForm("submit_num")
@@ -250,17 +263,25 @@ func checkId(idStr string) (int64, error) {
 	return id, nil
 }
 
+func checkLimit(limitStr string) (int64, error) {
+	if limitStr == "" {
+		return 0, errors.New("empty ID.")
+	}
+	limit, err := strconv.ParseInt(limitStr, 0, 64)
+	if err != nil {
+		return 0, errors.New("Invalid ID.")
+	}
+	return limit, nil
+}
+
 // curl -s -X GET '127.0.0.1:8080/backend/v1/user/111/info' | jq .
 func FetchUserInfo(c *gin.Context, db *gorm.DB) {
-	userIdStr := c.Param("user_id")
-	userId, err := checkId(userIdStr)
-	if err != nil {
+	address := c.Param("address")
+	user := types.User{Address: address}
+	if err := db.First(&user, user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var user types.User
-	user.Id = userId
-	db.First(&user, user)
 	db.Model(&user).Association("Skills").Find(&user.Skills)
 	c.JSON(http.StatusOK, user)
 }
@@ -274,21 +295,18 @@ func FetchUserInfo(c *gin.Context, db *gorm.DB) {
 //  -H 'content-type: application/json' \
 //  -d '{ "email": "user111@bountinet.com" }'
 func UpdateUserInfo(c *gin.Context, db *gorm.DB) {
+	address := c.Param("address")
+	user := types.User{Address: address}
+	if err := db.First(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	var user2 types.User
 	if err := c.ShouldBind(&user2); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// TODO: may config in binding?
 	user2.UpdateTime = nil
-	log.Printf("Binded user: %v\n", user2)
-	userIdStr := c.Param("user_id")
-	userId, err := checkId(userIdStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	user := types.User{Id: userId}
 	db.First(&user, user)
 	db.Model(&user).Update(user2)
 	c.JSON(http.StatusOK, user)
@@ -299,7 +317,22 @@ func FetchUserMissions(c *gin.Context, db *gorm.DB) {
 }
 
 func FetchSkills(c *gin.Context, db *gorm.DB) {
+	var skill types.Skill
+	if err := c.ShouldBind(&skill); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	skill.UpdateTime = nil
 
+	limitStr := c.DefaultQuery("limit", "30")
+	limit, err := checkLimit(limitStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var skills []types.Skill
+	db.Where(skill).Limit(limit).Find(&skills)
+	c.JSON(http.StatusOK, skills)
 }
 
 //func (c *gin.Context, db *gorm.DB) {

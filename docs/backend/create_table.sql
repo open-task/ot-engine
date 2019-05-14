@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS skills (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `skill` VARCHAR(200) UNIQUE,
+  `tag` VARCHAR(200) UNIQUE,
   claim INT DEFAULT 0 COMMENT 'claim number of this skill',
   submit INT DEFAULT 0 COMMENT 'submit number of this skill',
   confirm INT DEFAULT 0 COMMENT 'confirm number of this skill',
