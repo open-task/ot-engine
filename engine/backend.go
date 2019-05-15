@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -14,6 +15,10 @@ import (
 // curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'email=u1@a.com&skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
 func AddUserSkill(c *gin.Context, db *gorm.DB) {
 	address := c.Param("address")
+	if address == "undefined" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid address."})
+		return
+	}
 	user := types.User{Address: address}
 	if err := db.FirstOrCreate(&user, user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -348,5 +353,28 @@ func GetSkills(c *gin.Context, db *gorm.DB) {
 }
 
 func DeleteSkills(c *gin.Context, db *gorm.DB) {
+
+}
+
+func ListSkills(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
+	limitStr := c.DefaultQuery("limit", "30")
+	limit, err := checkLimit(limitStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var skills []types.Skill
+	backendDB.Order("confirm desc").Limit(limit).Find(&skills)
+	for i, s := range skills {
+		skills[i].UserNumber = backendDB.Model(s).Association("users").Count()
+	}
+	c.JSON(http.StatusOK, skills)
+}
+
+func GetUsers(c *gin.Context, backend *gorm.DB, engine *sql.DB) {
+
+}
+
+func AddSkill(c *gin.Context, backend *gorm.DB, engine *sql.DB) {
 
 }

@@ -120,6 +120,15 @@ func (n *Node) Setup() {
 
 	backend := n.GinServer.Group("/backend/v1")
 	{
+		backend.GET("/list_skills", func(c *gin.Context) {
+			engine.ListSkills(c, n.BackendDB, n.EngineDB)
+		})
+		backend.POST("/get_users", func(c *gin.Context) {
+			engine.GetUsers(c, n.BackendDB, n.EngineDB)
+		})
+		backend.POST("/add_skill", func(c *gin.Context) {
+			engine.AddSkill(c, n.BackendDB, n.EngineDB)
+		})
 		user := backend.Group("/user/:address")
 		{
 			user.GET("/skill", func(c *gin.Context) {
@@ -182,9 +191,6 @@ func (n *Node) Setup() {
 			})
 			skill.GET("/:id/user", func(c *gin.Context) {
 
-				//skill.GET("/top", func(c *gin.Context) {
-				//	engine.TopSkills(c, n.BackendDB)
-				//})
 				engine.FetchSkillProviders(c, n.BackendDB)
 			})
 		}
