@@ -274,7 +274,7 @@ func checkLimit(limitStr string) (int64, error) {
 	return limit, nil
 }
 
-// curl -s -X GET '127.0.0.1:8080/backend/v1/user/111/info' | jq .
+// curl -s -X GET '127.0.0.1:8080/backend/v1/user/0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b/info' | jq .
 func FetchUserInfo(c *gin.Context, db *gorm.DB) {
 	address := c.Param("address")
 	user := types.User{Address: address}
@@ -331,7 +331,7 @@ func FetchSkills(c *gin.Context, db *gorm.DB) {
 		return
 	}
 	var skills []types.Skill
-	db.Where(skill).Limit(limit).Find(&skills)
+	db.Where(skill).Order("confirm desc").Limit(limit).Find(&skills)
 	c.JSON(http.StatusOK, skills)
 }
 

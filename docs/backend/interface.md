@@ -27,7 +27,8 @@ URL|请求方法|含义|请求参数|返回参数
 /backend/v1/user/:address/info | POST | 更新用户信息 | `user_id`: 用户ID<br>`address`:公钥地址<br>`email`:邮件地址<br> | `user`：用户信息
 /backend/v1/user/:address/skill| GET  | 获得技能列表 |`skill`: 技能 |`skills`: 技能列表
 /backend/v1/user/:address/skill| POST | 添加技能    |`skill`: 技能 | `skill`: 技能
-/backend/v1/skill | GET | 查询技能信息 |`tag`:技能<br>`limit`:条数| `skills`:`skill`列表|
+/backend/v1/skill   | GET | 查询技能信息 |`tag`:技能<br>`limit`:条数| `skills`:`skill`列表|
+/backend/v1/skill/:skill_id/user | GET | 查询技能提供者 |`id`:技能ID<br>`limit`:条数| `users`:`user`列表|
 */backend/v1/skill/update_skill(not implemented)* |POST | 更新技能列表 |`user`: 用户(地址)<br>`email`:邮件地址<br>`skill`: 技能列表|`skill`: 技能列表
 */backend/v1/skill/get_skill(not implemented)*    |POST | 查询技能列表 |`user`: 用户(地址)<br>`email`:邮件地址<br>`skill`: 技能列表|`skill`: 技能列表
 */backend/v1/skill/del_skill(not implemented)*    |POST | 删除技能信息 |`user`: 用户(地址)<br>`email`:邮件地址<br>`skill`: 技能列表|`skill`: 技能列表
@@ -112,7 +113,7 @@ curl -s -X POST \
 ```
 
 
-## 获得某用户的全部技能列表(`GET /backend/v1/user/:user/skill`)
+## 查询技能列表(`GET /backend/v1/user/:user/skill`)
 
 ### 请求参数
 
@@ -202,12 +203,15 @@ curl -s -X GET '127.0.0.1:8080/backend/v1/skill?tag=s1' | jq .
 ```
 
 
-##
+## 查询技能提供者
 
 ### 请求参数
 
+- `skill_id`: 技能ID
 
 ### 返回参数
+
+- `users`: `user`列表
 
 ### 示例
 
@@ -215,11 +219,18 @@ curl -s -X GET '127.0.0.1:8080/backend/v1/skill?tag=s1' | jq .
 请求
 
 ```bash
-
+curl -s -X GET 'http://127.0.0.1:8080/backend/v1/skill/1/user' | jq .
 ```
 
 返回
 
 ```json
-
+[
+  {
+    "id": 9,
+    "address": "0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b",
+    "email": "user111@bountinet.com",
+    "update_time": "2019-05-14T18:33:47+08:00"
+  }
+]
 ```
