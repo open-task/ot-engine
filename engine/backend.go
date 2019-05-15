@@ -391,7 +391,28 @@ func GetUsers(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
 }
 
 func AddSkill(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
+	address := c.PostForm("address")
+	if address == "undefined" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid address."})
+		return
+	}
+	user := types.User{Address: address}
+	if err := backendDB.FirstOrCreate(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var skill types.Skill
+	if err := c.ShouldBind(&skill); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	} else {
+		skill.UpdateTime = nil //clear fake update time
+	}
 
+	backendDB.FirstOrCreate(&skill, skill)
+	user.Skills = append(user.Skills, skill)
+	backendDB.Save(&user) // for statements
+	c.JSON(http.StatusOK, skill)
 }
 
 func getMissionSummary(db *sql.DB, users []types.User) {
@@ -457,31 +478,31 @@ GROUP BY solver;
 		log.Fatal(err)
 	}
 
-//	query = fmt.Sprintf(`
-//SELECT solver,
-//       count(solver)
-//FROM solution
-//WHERE solver IN (%s)
-//GROUP BY solver;
-//`, addresses)
-//	rows3, err := db.Query(query)
-//	if err != nil {
-//		fmt.Printf("Database Error when retrive solution: %s", err.Error())
-//		return
-//	}
-//	defer rows2.Close()
-//
-//	for rows3.Next() {
-//		var address string
-//		var count int64
-//		err1 := rows3.Scan(&address, &count)
-//		if err1 != nil {
-//			log.Println(err1)
-//			continue
-//		}
-//		users[pos[address]].MissionSummary.Submit = count
-//	}
-//	if err = rows3.Err(); err != nil {
-//		log.Fatal(err)
-//	}
+	//	query = fmt.Sprintf(`
+	//SELECT solver,
+	//       count(solver)
+	//FROM solution
+	//WHERE solver IN (%s)
+	//GROUP BY solver;
+	//`, addresses)
+	//	rows3, err := db.Query(query)
+	//	if err != nil {
+	//		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+	//		return
+	//	}
+	//	defer rows2.Close()
+	//
+	//	for rows3.Next() {
+	//		var address string
+	//		var count int64
+	//		err1 := rows3.Scan(&address, &count)
+	//		if err1 != nil {
+	//			log.Println(err1)
+	//			continue
+	//		}
+	//		users[pos[address]].MissionSummary.Submit = count
+	//	}
+	//	if err = rows3.Err(); err != nil {
+	//		log.Fatal(err)
+	//	}
 }
