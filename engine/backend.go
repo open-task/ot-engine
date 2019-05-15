@@ -376,7 +376,7 @@ func ListSkills(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
 
 // curl -s -X GET http://127.0.0.1:8080/backend/v1/list_users?skill_id=2 | jq .
 func GetUsers(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
-	idStr := c.Query("skill_id")
+	idStr := c.Query("id")
 	id, err := checkId(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
