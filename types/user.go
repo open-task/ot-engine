@@ -15,6 +15,6 @@ type User struct {
 type MissionSummary struct {
 	Publish    int64      `json:"publish"`
 	Submit     int64      `json:"submit"`
-	Confirm    int64      `json:"confirm"`
+	Accept     int64      `json:"accept"`
 	LastActive *time.Time `json:"last_active"`
 }

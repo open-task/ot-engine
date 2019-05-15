@@ -123,7 +123,7 @@ func (n *Node) Setup() {
 		backend.GET("/list_skills", func(c *gin.Context) {
 			engine.ListSkills(c, n.BackendDB, n.EngineDB)
 		})
-		backend.POST("/get_users", func(c *gin.Context) {
+		backend.GET("/get_users", func(c *gin.Context) {
 			engine.GetUsers(c, n.BackendDB, n.EngineDB)
 		})
 		backend.POST("/add_skill", func(c *gin.Context) {

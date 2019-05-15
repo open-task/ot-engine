@@ -3,6 +3,7 @@ package engine
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/open-task/ot-engine/types"
@@ -356,6 +357,8 @@ func DeleteSkills(c *gin.Context, db *gorm.DB) {
 
 }
 
+// curl -s -X GET http://127.0.0.1:8080/backend/v1/list_skills | jq .
+// curl -s -X GET http://127.0.0.1:8080/backend/v1/list_skills?limit=2 | jq .
 func ListSkills(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
 	limitStr := c.DefaultQuery("limit", "30")
 	limit, err := checkLimit(limitStr)
@@ -371,10 +374,114 @@ func ListSkills(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
 	c.JSON(http.StatusOK, skills)
 }
 
-func GetUsers(c *gin.Context, backend *gorm.DB, engine *sql.DB) {
+// curl -s -X GET http://127.0.0.1:8080/backend/v1/list_users?skill_id=2 | jq .
+func GetUsers(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
+	idStr := c.Query("skill_id")
+	id, err := checkId(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+
+	skill := types.Skill{Id: id}
+	var users []types.User
+	backendDB.Model(&skill).Association("Users").Find(&users)
+	getMissionSummary(engineDB, users)
+	c.JSON(http.StatusOK, users)
+}
+
+func AddSkill(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
 
 }
 
-func AddSkill(c *gin.Context, backend *gorm.DB, engine *sql.DB) {
+func getMissionSummary(db *sql.DB, users []types.User) {
+	pos := make(map[string]int, len(users))
+	var addresses []string
+	for i, u := range users {
+		pos[u.Address] = i
+		addresses = append(addresses, u.Address)
+	}
+	query := fmt.Sprintf(`
+SELECT publisher,
+       count(publisher)
+FROM mission
+WHERE publisher IN (%s)
+GROUP BY publisher;
+`, addresses)
+	rows1, err := db.Query(query)
+	if err != nil {
+		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+		return
+	}
+	defer rows1.Close()
 
+	for rows1.Next() {
+		var address string
+		var count int64
+		err1 := rows1.Scan(&address, &count)
+		if err1 != nil {
+			log.Println(err1)
+			continue
+		}
+		users[pos[address]].MissionSummary.Publish = count
+	}
+	if err = rows1.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	query = fmt.Sprintf(`
+SELECT solver,
+       count(solver)
+FROM solution
+WHERE solver IN (%s)
+GROUP BY solver;
+`, addresses)
+	rows2, err := db.Query(query)
+	if err != nil {
+		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+		return
+	}
+	defer rows2.Close()
+
+	for rows2.Next() {
+		var address string
+		var count int64
+		err1 := rows2.Scan(&address, &count)
+		if err1 != nil {
+			log.Println(err1)
+			continue
+		}
+		users[pos[address]].MissionSummary.Submit = count
+	}
+	if err = rows2.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+//	query = fmt.Sprintf(`
+//SELECT solver,
+//       count(solver)
+//FROM solution
+//WHERE solver IN (%s)
+//GROUP BY solver;
+//`, addresses)
+//	rows3, err := db.Query(query)
+//	if err != nil {
+//		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+//		return
+//	}
+//	defer rows2.Close()
+//
+//	for rows3.Next() {
+//		var address string
+//		var count int64
+//		err1 := rows3.Scan(&address, &count)
+//		if err1 != nil {
+//			log.Println(err1)
+//			continue
+//		}
+//		users[pos[address]].MissionSummary.Submit = count
+//	}
+//	if err = rows3.Err(); err != nil {
+//		log.Fatal(err)
+//	}
 }
