@@ -409,26 +409,38 @@ func AddSkill(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
 		skill.UpdateTime = nil //clear fake update time
 	}
 
-	backendDB.FirstOrCreate(&skill, skill)
+	if err := backendDB.FirstOrCreate(&skill, skill).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	user.Skills = append(user.Skills, skill)
 	backendDB.Save(&user) // for statements
 	c.JSON(http.StatusOK, skill)
 }
 
 func getMissionSummary(db *sql.DB, users []types.User) {
+	if len(users) == 0 {
+		return
+	}
 	pos := make(map[string]int, len(users))
 	var addresses []string
 	for i, u := range users {
 		pos[u.Address] = i
 		addresses = append(addresses, u.Address)
 	}
+	if len(addresses) == 0 {
+		return
+	}
+
+	addr_list := strings.Join(addresses, "','")
+	addr_list = "'" + addr_list + "'"
 	query := fmt.Sprintf(`
 SELECT publisher,
        count(publisher)
 FROM mission
 WHERE publisher IN (%s)
 GROUP BY publisher;
-`, addresses)
+`, addr_list)
 	rows1, err := db.Query(query)
 	if err != nil {
 		fmt.Printf("Database Error when retrive solution: %s", err.Error())
@@ -456,7 +468,7 @@ SELECT solver,
 FROM solution
 WHERE solver IN (%s)
 GROUP BY solver;
-`, addresses)
+`, addr_list)
 	rows2, err := db.Query(query)
 	if err != nil {
 		fmt.Printf("Database Error when retrive solution: %s", err.Error())

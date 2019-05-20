@@ -36,7 +36,54 @@ URL|请求方法|含义|请求参数|返回参数
 */backend/v1/skill/get_skill(not implemented)*    |POST | 查询技能列表 |`user`: 用户(地址)<br>`email`:邮件地址<br>`skill`: 技能列表|`skill`: 技能列表
 */backend/v1/skill/del_skill(not implemented)*    |POST | 删除技能信息 |`user`: 用户(地址)<br>`email`:邮件地址<br>`skill`: 技能列表|`skill`: 技能列表
 
-  
+## 获得技能列表
+
+```bash
+curl -s -X GET http://127.0.0.1:8080/backend/v1/list_skills | jq .
+```
+
+```json
+[
+  {
+    "id": 1,
+    "tag": "s1",
+    "user_number": 2
+  },
+  {
+    "id": 2,
+    "tag": "s3",
+    "user_number": 1
+  },
+  {
+    "id": 3,
+    "tag": "区块链",
+    "user_number": 2
+  },
+  {
+    "id": 4,
+    "tag": "Golang",
+    "user_number": 1
+  }
+]
+```
+
+## 获得用户列表
+
+
+## 添加技能
+
+```bash
+curl -s -X POST \
+  http://127.0.0.1:8080/backend/v1/add_skill \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -d 'email=user2@bountinet.com&address=0x2707732B64b6b10bC1658AE5eD39788C9D2479C5&tag=Golang' | jq .
+
+curl -s -X POST \
+  http://127.0.0.1:8080/backend/v1/add_skill \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -d 'address=0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b&tag=Golang' | jq .
+```
+
 ## 查询用户信息
 
 ### 请求参数
