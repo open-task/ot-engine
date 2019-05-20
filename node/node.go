@@ -154,7 +154,7 @@ func (n *Node) Setup() {
 			})
 
 			user.GET("/info", func(c *gin.Context) {
-				engine.FetchUserInfo(c, n.BackendDB)
+				engine.FetchUserInfo(c, n.BackendDB, n.EngineDB)
 			})
 			user.POST("/info", func(c *gin.Context) {
 				engine.UpdateUserInfo(c, n.BackendDB)

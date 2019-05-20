@@ -282,7 +282,7 @@ func checkLimit(limitStr string) (int64, error) {
 }
 
 // curl -s -X GET '127.0.0.1:8080/backend/v1/user/0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b/info' | jq .
-func FetchUserInfo(c *gin.Context, db *gorm.DB) {
+func FetchUserInfo(c *gin.Context, db *gorm.DB, engineDB *sql.DB) {
 	address := c.Param("address")
 	user := types.User{Address: address}
 	if err := db.First(&user, user).Error; err != nil {
@@ -290,6 +290,7 @@ func FetchUserInfo(c *gin.Context, db *gorm.DB) {
 		return
 	}
 	db.Model(&user).Association("Skills").Find(&user.Skills)
+	getMissionSummaryForOne(engineDB, &user)
 	c.JSON(http.StatusOK, user)
 }
 
@@ -512,32 +513,82 @@ GROUP BY solver;
 	if err = rows2.Err(); err != nil {
 		log.Fatal(err)
 	}
+}
 
-	//	query = fmt.Sprintf(`
-	//SELECT solver,
-	//       count(solver)
-	//FROM solution
-	//WHERE solver IN (%s)
-	//GROUP BY solver;
-	//`, addresses)
-	//	rows3, err := db.Query(query)
-	//	if err != nil {
-	//		fmt.Printf("Database Error when retrive solution: %s", err.Error())
-	//		return
-	//	}
-	//	defer rows2.Close()
-	//
-	//	for rows3.Next() {
-	//		var address string
-	//		var count int64
-	//		err1 := rows3.Scan(&address, &count)
-	//		if err1 != nil {
-	//			log.Println(err1)
-	//			continue
-	//		}
-	//		users[pos[address]].MissionSummary.Submit = count
-	//	}
-	//	if err = rows3.Err(); err != nil {
-	//		log.Fatal(err)
-	//	}
+func getMissionSummaryForOne(db *sql.DB, user *types.User) {
+	if user.Address == "" {
+		return
+	}
+	layout := "2006-01-02 15:04:05.999999999 -0700 MST"
+
+	query := `
+SELECT count(publisher),
+       MAX(txtime)
+FROM mission
+WHERE publisher = ?;
+`
+	rows1, err := db.Query(query, user.Address)
+	if err != nil {
+		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+		return
+	}
+	defer rows1.Close()
+
+	for rows1.Next() {
+		var count int64
+		var txTimeStr string
+
+		if err1 := rows1.Scan(&count, &txTimeStr); err1 != nil {
+			log.Println(err1)
+			continue
+		}
+		user.MissionSummary.Publish = count
+
+		txTime, err2 := time.Parse(layout, txTimeStr)
+		if err2 != nil {
+			log.Println(err2)
+		}
+		if user.MissionSummary.LastActive == nil || user.MissionSummary.LastActive.Before(txTime) {
+			user.MissionSummary.LastActive = &txTime
+		}
+	}
+	if err = rows1.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	query = `
+SELECT count(solver),
+       MAX(txtime)
+FROM solution
+WHERE solver = ?;
+`
+	rows2, err := db.Query(query, user.Address)
+	if err != nil {
+		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+		return
+	}
+	defer rows2.Close()
+
+	for rows2.Next() {
+		var count int64
+		var txTimeStr string
+
+		if err1 := rows2.Scan(&count, &txTimeStr); err1 != nil {
+			log.Println(err1)
+			continue
+		}
+		user.MissionSummary.Submit = count
+
+		txTime, err2 := time.Parse(layout, txTimeStr)
+		if err2 != nil {
+			log.Println(err2)
+			continue
+		}
+		if user.MissionSummary.LastActive == nil || user.MissionSummary.LastActive.Before(txTime) {
+			user.MissionSummary.LastActive = &txTime
+		}
+	}
+	if err = rows2.Err(); err != nil {
+		log.Fatal(err)
+	}
 }
