@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // curl -s -X POST -H 'application/x-www-form-urlencoded' -d 'email=u1@a.com&skill=s1' '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
@@ -434,9 +435,11 @@ func getMissionSummary(db *sql.DB, users []types.User) {
 
 	addr_list := strings.Join(addresses, "','")
 	addr_list = "'" + addr_list + "'"
+	layout := "2006-01-02 15:04:05.999999999 -0700 MST"
 	query := fmt.Sprintf(`
 SELECT publisher,
-       count(publisher)
+       count(publisher),
+       MAX(txtime)
 FROM mission
 WHERE publisher IN (%s)
 GROUP BY publisher;
@@ -451,12 +454,21 @@ GROUP BY publisher;
 	for rows1.Next() {
 		var address string
 		var count int64
-		err1 := rows1.Scan(&address, &count)
-		if err1 != nil {
+		var txTimeStr string
+
+		if err1 := rows1.Scan(&address, &count, &txTimeStr); err1 != nil {
 			log.Println(err1)
 			continue
 		}
 		users[pos[address]].MissionSummary.Publish = count
+
+		txTime, err2 := time.Parse(layout, txTimeStr)
+		if err2 != nil {
+			log.Println(err2)
+		}
+		if users[pos[address]].MissionSummary.LastActive == nil || users[pos[address]].MissionSummary.LastActive.Before(txTime) {
+			users[pos[address]].MissionSummary.LastActive = &txTime
+		}
 	}
 	if err = rows1.Err(); err != nil {
 		log.Fatal(err)
@@ -464,7 +476,8 @@ GROUP BY publisher;
 
 	query = fmt.Sprintf(`
 SELECT solver,
-       count(solver)
+       count(solver),
+       MAX(txtime)
 FROM solution
 WHERE solver IN (%s)
 GROUP BY solver;
@@ -479,12 +492,22 @@ GROUP BY solver;
 	for rows2.Next() {
 		var address string
 		var count int64
-		err1 := rows2.Scan(&address, &count)
-		if err1 != nil {
+		var txTimeStr string
+
+		if err1 := rows2.Scan(&address, &count, &txTimeStr); err1 != nil {
 			log.Println(err1)
 			continue
 		}
 		users[pos[address]].MissionSummary.Submit = count
+
+		txTime, err2 := time.Parse(layout, txTimeStr)
+		if err2 != nil {
+			log.Println(err2)
+			continue
+		}
+		if users[pos[address]].MissionSummary.LastActive == nil || users[pos[address]].MissionSummary.LastActive.Before(txTime) {
+			users[pos[address]].MissionSummary.LastActive = &txTime
+		}
 	}
 	if err = rows2.Err(); err != nil {
 		log.Fatal(err)
