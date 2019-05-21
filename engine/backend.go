@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/open-task/ot-engine/types"
 	"log"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -515,6 +516,18 @@ GROUP BY solver;
 	}
 }
 
+func GetUserInfo(c *gin.Context, backendDB *gorm.DB, engineDB *sql.DB) {
+	address := c.Query("address")
+	user := types.User{Address: address}
+	if err := backendDB.First(&user, user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	backendDB.Model(&user).Association("Skills").Find(&user.Skills)
+	getMissionSummaryForOne(engineDB, &user)
+	c.JSON(http.StatusOK, user)
+}
+
 func getMissionSummaryForOne(db *sql.DB, user *types.User) {
 	if user.Address == "" {
 		return
@@ -591,4 +604,27 @@ WHERE solver = ?;
 	if err = rows2.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	query = `
+SELECT sum(reward)
+FROM mission
+WHERE publisher = ?
+  AND solved=1;
+`
+	var rewardStr sql.NullString
+	if err := db.QueryRow(query, user.Address).Scan(&rewardStr);err != nil {
+		fmt.Printf("Database Error when retrive solution: %s", err.Error())
+		return
+	}
+	if rewardInDET, success := big.NewFloat(0).SetString(rewardStr.String); success {
+		rewardInDET.Quo(rewardInDET, types.Decimals)
+		user.MissionSummary.PaidRewardDET = rewardInDET
+	}
+//
+//	query = `
+//SELECT mission_id
+//FROM solution
+//WHERE solver = ?;
+//`
+
 }

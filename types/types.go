@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var Decimals = big.NewFloat(1e+18)
+
 type PublishEvent struct {
 	Block          uint64     `json:"block"`
 	Tx             string     `json:"tx"`

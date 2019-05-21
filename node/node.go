@@ -120,6 +120,9 @@ func (n *Node) Setup() {
 
 	backend := n.GinServer.Group("/backend/v1")
 	{
+		backend.GET("/user_info", func(c *gin.Context) {
+			engine.GetUserInfo(c, n.BackendDB, n.EngineDB)
+		})
 		backend.GET("/list_skills", func(c *gin.Context) {
 			engine.ListSkills(c, n.BackendDB, n.EngineDB)
 		})

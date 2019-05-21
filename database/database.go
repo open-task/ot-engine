@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-var Decimals = big.NewFloat(1e+18)
-
 func Publish(ctx context.Context, db *sql.DB, e PublishEvent) (err error) {
 	// 接受日志重复，并如实记录下来（下同）。
 	stmtIns, err := db.PrepareContext(ctx, `INSERT INTO mission (
