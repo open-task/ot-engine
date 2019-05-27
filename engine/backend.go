@@ -41,16 +41,16 @@ func AddUserSkill(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, skill)
 }
 
-// curl -s -X GET '127.0.0.1:8080/backend/v1/user/u1/skill' | jq .
+// curl -s -X GET '127.0.0.1:8080/backend/v1/user/0x1c635f4756ED1dD9Ed615dD0A0Ff10E3015cFa7b/skill' | jq .
 func FetchUserSkills(c *gin.Context, db *gorm.DB) {
 	address := c.Param("address")
 	user := types.User{Address: address}
+	var skills []types.Skill
 	if err := db.First(&user, user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusOK, [0]types.Skill{}) // empty list
 		return
 	}
 
-	var skills []types.Skill
 	db.Model(&user).Association("Skills").Find(&skills)
 	c.JSON(http.StatusOK, skills)
 }
@@ -612,7 +612,7 @@ WHERE publisher = ?
   AND solved=1;
 `
 	var rewardStr sql.NullString
-	if err := db.QueryRow(query, user.Address).Scan(&rewardStr);err != nil {
+	if err := db.QueryRow(query, user.Address).Scan(&rewardStr); err != nil {
 		fmt.Printf("Database Error when retrive solution: %s", err.Error())
 		return
 	}
@@ -620,11 +620,11 @@ WHERE publisher = ?
 		rewardInDET.Quo(rewardInDET, types.Decimals)
 		user.MissionSummary.PaidRewardDET = rewardInDET
 	}
-//
-//	query = `
-//SELECT mission_id
-//FROM solution
-//WHERE solver = ?;
-//`
+	//
+	//	query = `
+	//SELECT mission_id
+	//FROM solution
+	//WHERE solver = ?;
+	//`
 
 }

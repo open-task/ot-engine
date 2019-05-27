@@ -23,6 +23,7 @@
 
 URL|请求方法|含义|请求参数|返回参数
 |:---|:---|:---|:---|:---
+/backend/v1/user_info   | GET  | 获得用户信息 | 无 | `skills`: 技能列表
 /backend/v1/list_skills | GET  | 获得技能列表 | `limit`:条数 | `skills`: 技能列表
 /backend/v1/get_users   | GET  | 获得用户列表 | `id`:技能id  | `users`: 用户列表
 /backend/v1/add_skill   | POST | 添加技能    | `address`: 用户地址<br>`tag`: 技能标签 | `skill`: 技能
