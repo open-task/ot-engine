@@ -1,14 +1,10 @@
--- CREATE DATABASE kovan3 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- CREATE USER 'engine'@'localhost' IDENTIFIED BY 'password';
--- GRANT ALL PRIVILEGES ON kovan3.* To 'engine'@'localhost';
-
 CREATE TABLE IF NOT EXISTS mission (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   tx VARCHAR(80) UNIQUE,
   block INT,
   mission_id VARCHAR(20),
   reward DECIMAL(27,0),
-  context VARCHAR(200) COMMENT 'data',
+  context VARCHAR(1000) COMMENT 'data',
   publisher VARCHAR(43),
   solution_num INT DEFAULT 0,
   filter TINYINT(1) DEFAULT 0,
@@ -19,6 +15,8 @@ CREATE TABLE IF NOT EXISTS mission (
 
 -- ALTER TABLE mission
 -- ADD COLUMN filter TINYINT(1) DEFAULT 0 AFTER solution_num;
+-- ALTER TABLE mission
+-- MODIFY COLUMN context VARCHAR(1000);
 
 CREATE TABLE IF NOT EXISTS solution (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -26,7 +24,7 @@ CREATE TABLE IF NOT EXISTS solution (
   block INT,
   solution_id VARCHAR(20),
   mission_id VARCHAR(20),
-  context VARCHAR(200) COMMENT 'data',
+  context VARCHAR(1000) COMMENT 'data',
   solver VARCHAR(43),
   status int DEFAULT 0,
   filter TINYINT(1) DEFAULT 0,
@@ -36,6 +34,8 @@ CREATE TABLE IF NOT EXISTS solution (
 
 -- ALTER TABLE solution
 -- ADD COLUMN filter TINYINT(1) DEFAULT 0 AFTER status;
+-- ALTER TABLE solution
+-- MODIFY COLUMN context VARCHAR(1000);
 
 CREATE TABLE IF NOT EXISTS accept (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
